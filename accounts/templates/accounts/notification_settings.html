@@ -1,0 +1,214 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+
+{% block title %}Notification Settings{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-gradient-to-r from-teal-50 to-cyan-50">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="card-title text-teal-700">Notification Settings</h2>
+                    <p class="card-subtitle text-muted">Manage how you receive notifications from Mediq</p>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="master-toggle" 
+                           {% if preferences.appointments_enabled or preferences.messages_enabled %}checked{% endif %}>
+                    <label class="form-check-label" for="master-toggle">
+                        <span id="master-status">Enabled</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row g-4 mb-4">
+                    <!-- Appointment Reminders -->
+                    <div class="col-md-6">
+                        <div class="card h-100 border">
+                            <div class="card-body d-flex">
+                                <div class="me-3">
+                                    <i class="bi bi-calendar text-teal-600"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title">Appointment Reminders</h5>
+                                    <p class="card-text text-muted small">Get notified about upcoming appointments</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input notification-toggle" type="checkbox" 
+                                           name="appointments_enabled" id="appointments-toggle"
+                                           {% if preferences.appointments_enabled %}checked{% endif %}>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Doctor Messages -->
+                    <div class="col-md-6">
+                        <div class="card h-100 border">
+                            <div class="card-body d-flex">
+                                <div class="me-3">
+                                    <i class="bi bi-chat-text text-teal-600"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title">Doctor Messages</h5>
+                                    <p class="card-text text-muted small">Notifications for new messages from your doctors</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input notification-toggle" type="checkbox" 
+                                           name="messages_enabled" id="messages-toggle"
+                                           {% if preferences.messages_enabled %}checked{% endif %}>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <!-- Only Browser Push Option -->
+                <div class="row g-4 mb-4">
+                    <div class="col-12">
+                        <h5>Notification Delivery Method</h5>
+                    </div>
+                    
+                    <!-- Browser Push Notifications -->
+                    <div class="col-12">
+                        <div class="card h-100 border">
+                            <div class="card-body d-flex">
+                                <div class="me-3">
+                                    <i class="bi bi-bell"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title">Browser Push</h5>
+                                    <p class="card-text text-muted small">Receive notifications in your browser</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="browser_push_enabled" id="push-toggle"
+                                           {% if preferences.browser_push_enabled %}checked{% endif %}>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-light p-3 rounded mb-4">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="bi bi-info-circle"></i>
+                        </div>
+                        <div>
+                            <p class="mb-0 small">Browser notifications will only work when using this website in a supported browser. You'll need to allow notifications when prompted.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary me-2">Back to Dashboard</a>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Master toggle functionality
+    const masterToggle = document.getElementById('master-toggle');
+    const notificationToggles = document.querySelectorAll('.notification-toggle');
+    const masterStatus = document.getElementById('master-status');
+    
+    masterToggle.addEventListener('change', function() {
+        const enabled = this.checked;
+        notificationToggles.forEach(toggle => {
+            toggle.checked = enabled;
+            toggle.disabled = !enabled;
+        });
+        masterStatus.textContent = enabled ? 'Enabled' : 'Disabled';
+    });
+    
+    // Web Push setup
+    const pushToggle = document.getElementById('push-toggle');
+    
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+        pushToggle.disabled = false;
+        
+        pushToggle.addEventListener('change', function() {
+            if (this.checked) {
+                // Request permission and register for push
+                registerPush();
+            }
+        });
+    } else {
+        // Browser doesn't support push notifications
+        pushToggle.disabled = true;
+        pushToggle.checked = false;
+    }
+    
+    async function registerPush() {
+        try {
+            // Request permission
+            const permission = await Notification.requestPermission();
+            
+            if (permission !== 'granted') {
+                pushToggle.checked = false;
+                alert('You need to allow notification permission to receive browser notifications');
+                return;
+            }
+            
+            // Register service worker
+            const registration = await navigator.serviceWorker.register('/static/serviceWorker.js');
+            
+            // Get VAPID public key
+            const vapidPublicKey = '{{ vapid_public_key }}';
+            const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+            
+            // Subscribe to push
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedVapidKey
+            });
+            
+            // Send subscription to server
+            await fetch('/webpush/subscribe/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    subscription: subscription.toJSON()
+                })
+            });
+            
+        } catch (error) {
+            console.error('Error registering push notification:', error);
+            pushToggle.checked = false;
+            alert('There was an error enabling browser notifications. Please try again later.');
+        }
+    }
+    
+    // Helper function to convert base64 to Uint8Array for VAPID key
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+        
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+</script>
+{% endblock %}
+{% endblock %}
