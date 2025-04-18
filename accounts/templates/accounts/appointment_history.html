@@ -1,0 +1,140 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Appointment History - MedIQ</title>
+    <!-- Add necessary CSS links here -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Add styles here if needed, or link a CSS file */
+        body { padding-top: 20px; font-family: 'Poppins', sans-serif; }
+        .dashboard-nav { margin-bottom: 30px; }
+        .appointment-actions { margin-top: 0.5rem; }
+        .list-group-item { border-radius: 0.5rem; } /* Add some rounding */
+        /* Add accessibility styles if needed */
+         {% if request.session.high_contrast %}
+             body { background-color: #000; color: #fff; }
+             .list-group-item-light { background-color: #333; color: #fff; border-color: #ffea00; }
+             .list-group-item-info { background-color: #003366; color: #fff; border-color: #ffea00; }
+             .list-group-item-primary { background-color: #001f3f; color: #fff; border-color: #ffea00; }
+             .btn-outline-primary { color: #ffea00; border-color: #ffea00; }
+             .btn-outline-secondary { color: #ccc; border-color: #ccc; }
+             .btn-outline-danger { color: #ff6666; border-color: #ff6666; }
+             .modal-content { background-color: #222; color: #fff; border-color: #ffea00; }
+             .modal-header, .modal-footer { border-color: #ffea00; }
+             .close { color: #fff; }
+         {% elif request.session.dark_mode %}
+            body { background-color: #333; color: #fff; }
+             .list-group-item-light { background-color: #555; color: #fff; border-color: #666; }
+             .list-group-item-info { background-color: #2a9fd6; color: #fff; border-color: #2a9fd6; } /* Brighter blue */
+             .list-group-item-primary { background-color: #0056b3; color: #fff; border-color: #0056b3; } /* Standard dark blue */
+             .btn-outline-primary { color: #007bff; border-color: #007bff; }
+             .btn-outline-secondary { color: #ccc; border-color: #ccc; }
+             .btn-outline-danger { color: #dc3545; border-color: #dc3545; }
+             .modal-content { background-color: #444; color: #fff; }
+             .modal-header, .modal-footer { border-color: #555; }
+             .close { color: #fff; }
+         {% endif %}
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <!-- Dashboard Navigation -->
+    <div class="dashboard-nav d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-history mr-2"></i> Appointment History</h1>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if appointments %}
+        <div class="list-group">
+            {% for appointment in appointments %}
+                <div class="list-group-item list-group-item-action flex-column align-items-start mb-3 {% if appointment.is_past %}list-group-item-light{% elif appointment.is_today %}list-group-item-info{% else %}list-group-item-primary{% endif %}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">
+                            <i class="fas fa-calendar-check mr-2"></i> 
+                            {{ appointment.date }} at {{ appointment.time|time:"g:i A" }} 
+                            {% if appointment.is_today %}<span class="badge badge-info ml-2">Today</span>{% endif %}
+                            {% if appointment.is_past %}<span class="badge badge-secondary ml-2">Past</span>{% endif %}
+                        </h5>
+                        <small class="text-muted">Booked: {{ appointment.created_at|date:"N j, Y" }}</small>
+                    </div>
+                    <p class="mb-1">
+                        <strong>Doctor:</strong> {{ appointment.doctor }} ({{ appointment.specialty }})
+                    </p>
+                    {% if appointment.reason %}
+                        <p class="mb-1"><strong>Reason:</strong> {{ appointment.reason }}</p>
+                    {% endif %}
+                     {% if appointment.has_checked_in %}
+                        <span class="badge badge-success mt-2"><i class="fas fa-check-circle mr-1"></i> Checked In</span>
+                     {% endif %}
+
+                    {# Only show Edit/Cancel for future appointments #}
+                    {% if not appointment.is_past %}
+                        <div class="appointment-actions mt-2 text-right">
+                             <a href="{% url 'edit_appointment' appointment.id %}" class="btn btn-sm btn-outline-secondary mr-2" title="Edit Appointment">
+                                 <i class="fas fa-edit"></i> Edit
+                             </a>
+                             <button class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#cancelModal{{ appointment.id }}" title="Cancel Appointment">
+                                 <i class="fas fa-times-circle"></i> Cancel
+                             </button>
+                        </div>
+                    {% endif %}
+                </div>
+
+                 <!-- Cancel Confirmation Modal -->
+                 {% if not appointment.is_past %}
+                 <div class="modal fade" id="cancelModal{{ appointment.id }}" tabindex="-1" role="dialog" aria-labelledby="cancelModalLabel{{ appointment.id }}" aria-hidden="true">
+                     <div class="modal-dialog" role="document">
+                         <div class="modal-content">
+                             <div class="modal-header">
+                                 <h5 class="modal-title" id="cancelModalLabel{{ appointment.id }}">Confirm Cancellation</h5>
+                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                     <span aria-hidden="true">&times;</span>
+                                 </button>
+                             </div>
+                             <div class="modal-body">
+                                 Are you sure you want to cancel your appointment with {{ appointment.doctor }} on {{ appointment.date }} at {{ appointment.time|time:"g:i A" }}?
+                             </div>
+                             <div class="modal-footer">
+                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Keep Appointment</button>
+                                 <form action="{% url 'cancel_appointment' appointment.id %}" method="post" style="display: inline;">
+                                     {% csrf_token %}
+                                     <button type="submit" class="btn btn-danger">Yes, Cancel</button>
+                                 </form>
+                             </div>
+                         </div>
+                     </div>                    
+                 </div>
+                 {% endif %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info mt-4" role="alert">
+            You have no appointments booked yet. <a href="{% url 'book_appointment_direct' %}" class="alert-link">Book one now?</a>
+        </div>
+    {% endif %}
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html> 

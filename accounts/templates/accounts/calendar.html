@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Appointment Calendar</title>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css' rel='stylesheet' />
+    <style>
+      #calendar {
+          max-width: 900px;
+          margin: 40px auto;
+      }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mt-4">Your Appointment Calendar</h1>
+        <div id='calendar'></div>
+    </div>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: []  // Later, populate this array with your appointments data.
+            });
+            calendar.render();
+        });
+    </script>
+</body>
+</html>

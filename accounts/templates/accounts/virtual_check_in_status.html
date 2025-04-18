@@ -1,0 +1,188 @@
+{# Remove extends if not using base.html #}
+{# {% extends 'accounts/base.html' %} #}
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Virtual Check-In Status - MedIQ</title>
+    <!-- Add necessary CSS links -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { padding-top: 20px; font-family: 'Poppins', sans-serif; }
+        .dashboard-nav { margin-bottom: 30px; }
+        .status-card { border-radius: 0.75rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .timer-display { font-size: 2.5rem; font-weight: 600; letter-spacing: 2px; margin: 1rem 0; }
+        .details-section p { margin-bottom: 0.5rem; }
+        .checkin-button-area { margin-top: 1.5rem; }
+        /* Add accessibility styles */
+         {% if request.session.high_contrast %}
+             body { background-color: #000; color: #fff; }
+             .card { background-color: #111; border-color: #ffea00; }
+             .btn-primary { background-color: #ffea00; color: #000; border: none; }
+             .btn-secondary.disabled { background-color: #444; color: #888; border-color: #555; }
+             .btn-success.disabled { background-color: #004d00; color: #00ff00; border-color: #006600; }
+             .btn-outline-primary { color: #ffea00; border-color: #ffea00; }
+             .timer-display { color: #ffea00; }
+         {% elif request.session.dark_mode %}
+            body { background-color: #333; color: #fff; }
+             .card { background-color: #444; border-color: #555; }
+             .btn-primary { background-color: #007bff; border-color: #007bff; }
+             .btn-secondary.disabled { background-color: #5a6268; border-color: #545b62; }
+             .btn-success.disabled { background-color: #218838; border-color: #1e7e34; }
+             .btn-outline-primary { color: #007bff; border-color: #007bff; }
+             .timer-display { color: #eee; }
+         {% endif %}
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <!-- Dashboard Navigation -->
+    <div class="dashboard-nav d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-user-clock mr-2"></i> Virtual Check-In Status</h1>
+        <a href="{% url 'appointment_reminder' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Appointments
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card status-card text-center">
+                <div class="card-body p-4">
+                    <h4 class="card-title">Appointment Details</h4>
+                    <div class="details-section my-3">
+                        <p><strong>Date & Time:</strong> {{ appointment.date }} at {{ appointment.time|time:"g:i A" }}</p>
+                        <p><strong>Doctor:</strong> {{ appointment.doctor }} ({{ appointment.specialty }})</p>
+                        {% if appointment.reason %}
+                            <p><strong>Reason:</strong> {{ appointment.reason }}</p>
+                        {% endif %}
+                    </div>
+                    <hr>
+
+                    <div class="checkin-status-area mt-4">
+                        {% if has_checked_in %}
+                            <h3 class="text-success"><i class="fas fa-check-circle mr-2"></i>You are Checked In!</h3>
+                            <p class="text-muted">Checked in successfully.</p>
+                        {% elif is_expired %}
+                            <h3 class="text-danger"><i class="fas fa-times-circle mr-2"></i>Appointment Time Passed</h3>
+                            <p class="text-muted">The check-in window for this appointment has closed.</p>
+                        {% elif can_check_in %}
+                            <h3 class="text-primary">Check-In Window is Open!</h3>
+                             <div id="timer-until-appointment" class="timer-display">--:--:--</div>
+                             <p class="text-muted mb-3">Time remaining until appointment</p>
+                            <div class="checkin-button-area">
+                                <a href="{% url 'virtual_check_in' appointment.id %}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-user-check mr-2"></i> Check-In Now
+                                </a>
+                            </div>
+                            <small class="form-text text-muted text-center mt-2">Check-in available until {{ appointment.time|time:"g:i A" }}.</small>
+                        {% elif seconds_to_checkin_window > 0 %}
+                            <h3>Check-In Opens Soon</h3>
+                            <div id="timer-to-window" class="timer-display">--:--:--</div>
+                            <p class="text-muted">Remaining until check-in window opens (1 hour before)</p>
+                            <div class="checkin-button-area">
+                                <button class="btn btn-secondary btn-lg disabled">
+                                    Check-In Not Yet Available
+                                </button>
+                            </div>
+                        {% else %}
+                             {# Appointment is further in the future #}
+                             <h3>Check-In Not Yet Available</h3>
+                              <div id="timer-until-appointment-long" class="timer-display">--:--:--</div>
+                              <p class="text-muted">Time remaining until appointment</p>
+                             <p class="text-muted mt-3">Check-in will become available 1 hour before your appointment time.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Countdown Timer JavaScript #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    function startTimer(elementId, totalSeconds, onZeroCallback) {
+        const timerDisplay = document.getElementById(elementId);
+        if (!timerDisplay || isNaN(totalSeconds) || totalSeconds < 0) {
+            if (timerDisplay) timerDisplay.textContent = "00:00:00"; // Show zero if invalid/past
+            return;
+        }
+
+        let secondsRemaining = totalSeconds;
+        let intervalId = null;
+
+        function updateDisplay() {
+            if (secondsRemaining <= 0) {
+                clearInterval(intervalId);
+                timerDisplay.textContent = "00:00:00";
+                if (onZeroCallback) {
+                    onZeroCallback();
+                }
+                return;
+            }
+
+            const days = Math.floor(secondsRemaining / (3600 * 24));
+            const hours = Math.floor((secondsRemaining % (3600 * 24)) / 3600);
+            const minutes = Math.floor((secondsRemaining % 3600) / 60);
+            const seconds = secondsRemaining % 60;
+
+            let timeString = "";
+            if (days > 0) {
+                 timeString += `${days}d `;
+            }
+             timeString += `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            timerDisplay.textContent = timeString;
+            secondsRemaining--;
+        }
+
+        intervalId = setInterval(updateDisplay, 1000);
+        updateDisplay(); // Initial display
+    }
+
+    // Timer until Check-in Window Opens
+    const secondsToWindow = {{ seconds_to_checkin_window|default:-1 }};
+    if (secondsToWindow >= 0) {
+        startTimer('timer-to-window', secondsToWindow, function() {
+            // When this timer hits zero, reload the page to show the check-in button
+            window.location.reload(); 
+        });
+    }
+
+    // Timer until Appointment Starts (shown when check-in is open OR far away)
+    const secondsToAppt = {{ seconds_until_appointment|default:-1 }};
+    if (secondsToAppt >= 0) {
+         if (document.getElementById('timer-until-appointment')) {
+              startTimer('timer-until-appointment', secondsToAppt, null); // No callback needed
+         }
+         if (document.getElementById('timer-until-appointment-long')) {
+              startTimer('timer-until-appointment-long', secondsToAppt, null); // No callback needed
+         }
+    }
+
+});
+</script>
+
+{# Add Bootstrap JS Dependencies #}
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html> 

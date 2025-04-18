@@ -1,0 +1,230 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block content %}
+<style>
+    {% with font_size=request.session.font_size|default:22 alternative_font=request.session.alternative_font %}
+
+    body {
+        {% if request.session.high_contrast %}
+            background-color: #000;
+            color: #fff;
+        {% elif request.session.dark_mode %}
+            background-color: #333;
+            color: #fff;
+        {% else %}
+            background-color: #f4f4f4;
+            color: #333;
+        {% endif %}
+        font-family: {% if alternative_font %}'Poppins', sans-serif{% else %}'Arial', sans-serif{% endif %};
+        font-size: {{ font_size }}px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 40px 20px;
+    }
+
+    .dashboard-title {
+        font-size: calc({{ font_size }}px + 10px);
+        text-align: center;
+        color: #b30000;
+        margin-bottom: 50px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        border-bottom: 3px solid #b30000;
+        padding-bottom: 10px;
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
+        font-family: {% if alternative_font %}'Poppins', sans-serif{% else %}'Arial', sans-serif{% endif %};
+    }
+
+    .dashboard-container {
+        display: flex;
+        align-items: stretch;
+        gap: 50px;
+        padding: 40px;
+        border-radius: 18px;
+        border: 2px solid;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+        font-size: {{ font_size }}px;
+        font-family: {% if alternative_font %}'Poppins', sans-serif{% else %}'Arial', sans-serif{% endif %};
+
+        {% if request.session.high_contrast %}
+            background-color: #000;
+            color: #fff;
+            border-color: #FFD700;
+        {% elif request.session.dark_mode %}
+            background-color: #444;
+            color: #fff;
+            border-color: #FFD700;
+        {% else %}
+            background-color: #fff;
+            color: #333;
+            border-color: #111;
+        {% endif %}
+    }
+
+    .profile-section {
+        flex: 1;
+        max-width: 380px;
+        border-right: 2px solid #111;
+        padding-right: 30px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .profile-section img {
+        width: 100%;
+        max-width: 200px;
+        height: auto;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .profile-details {
+        padding: 20px;
+        border-radius: 14px;
+        min-height: 260px;
+        text-align: left;
+        font-size: {{ font_size }}px;
+        font-family: {% if alternative_font %}'Poppins', sans-serif{% else %}'Arial', sans-serif{% endif %};
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.03);
+
+        {% if request.session.high_contrast %}
+            background-color: #000;
+            color: #FFD700;
+            border: 2px solid #FFD700;
+        {% elif request.session.dark_mode %}
+            background-color: #555;
+            color: #fff;
+            border: 2px solid #ccc;
+        {% else %}
+            background-color: #fff5f5;
+            color: #8a0000;
+            border: 2px solid #b71c1c;
+        {% endif %}
+    }
+
+    .profile-details h4 {
+        margin-bottom: 12px;
+        font-size: calc({{ font_size }}px + 4px);
+        font-family: {% if alternative_font %}'Poppins', sans-serif{% else %}'Arial', sans-serif{% endif %};
+        {% if request.session.high_contrast %}
+            color: #FFD700;
+        {% else %}
+            color: #b71c1c;
+        {% endif %}
+    }
+
+    .feature-buttons {
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 30px;
+        padding: 60px 30px;
+        border-radius: 14px;
+        min-height: 400px;
+        font-family: {% if alternative_font %}'Poppins', sans-serif{% else %}'Arial', sans-serif{% endif %};
+        font-size: {{ font_size }}px;
+
+        {% if request.session.high_contrast %}
+            background-color: #000;
+            border: 2px solid #FFD700;
+        {% elif request.session.dark_mode %}
+            background-color: #555;
+            border: 2px solid #ccc;
+        {% else %}
+            background-color: #fff5f5;
+            border: 2px solid #b71c1c;
+        {% endif %}
+    }
+
+    .feature-buttons button {
+        background-color: #b71c1c;
+        color: white;
+        border: none;
+        padding: 20px 40px;
+        font-size: {{ font_size }}px;
+        font-family: {% if alternative_font %}'Poppins', sans-serif{% else %}'Arial', sans-serif{% endif %};
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        max-width: 300px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .feature-buttons button:hover {
+        background-color: #8e1212;
+        transform: scale(1.02);
+    }
+
+    .logout-section {
+        margin-top: 10px;
+    }
+
+    .logout-section a {
+        display: inline-block;
+        background-color: #444;
+        color: white;
+        padding: 14px 28px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: {{ font_size }}px;
+        font-family: {% if alternative_font %}'Poppins', sans-serif{% else %}'Arial', sans-serif{% endif %};
+    }
+
+    .logout-section a:hover {
+        background-color: #222;
+    }
+
+    {% endwith %}
+</style>
+
+<div class="container">
+    <div class="dashboard-title">Welcome, Dr. {{ doctor.name }} 🩺</div>
+
+    <div class="dashboard-container">
+        <div class="profile-section">
+            {% if doctor.profile_image %}
+                <img src="{{ doctor.profile_image.url }}"
+                     alt="Profile Picture"
+                     onerror="this.onerror=null;this.src='{% static 'accounts/images/default.jpg' %}';">
+            {% else %}
+                {% with doctor.name|cut:"Dr. "|cut:" "|title as image_name %}
+                    <img src="{% static 'accounts/images/Dr.' %}{{ image_name }}.jpg"
+                         alt="Profile Picture"
+                         onerror="this.onerror=null;this.src='{% static 'accounts/images/default.jpg' %}';">
+                {% endwith %}
+            {% endif %}
+
+            <div class="profile-details">
+                <h4>Dr. {{ doctor.name }}</h4>
+                <p><strong>Email:</strong> {{ doctor.email }}</p>
+                <p><strong>Phone:</strong> {{ doctor.phone }}</p>
+                <p><strong>Specialty:</strong> {{ doctor.specialty }}</p>
+                <p><strong>Age:</strong> {{ doctor.age }}</p>
+            </div>
+        </div>
+
+        <div class="feature-buttons">
+            <button onclick="location.href='{% url 'modify_profile' %}'">📝 Modify Profile Info</button>
+            <button onclick="location.href='{% url 'doctor_availability' %}'">📅 Choose Availability</button>
+            <button onclick="location.href='{% url 'doctor_accessibility_settings' %}'">♿ Accessibility Settings</button>
+            <div class="logout-section">
+                <a href="{% url 'logout' %}">🚪 Sign Out</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

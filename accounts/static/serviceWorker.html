@@ -1,0 +1,45 @@
+// accounts/static/serviceWorker.js
+self.addEventListener('push', function(event) {
+    var data = {};
+    if (event.data) {
+        data = event.data.json();
+    }
+
+    var title = data.title || "Mediq Notification";
+    var message = data.message || "You have a new notification";
+    var icon = data.icon || "/static/accounts/img/logo.png";
+    var tag = data.tag || "mediq-notification";
+    var url = data.url || "/accounts/appointments/";
+
+    event.waitUntil(
+        self.registration.showNotification(title, {
+            body: message,
+            icon: icon,
+            tag: tag,
+            data: {
+                url: url
+            }
+        })
+    );
+});
+
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    
+    var url = event.notification.data.url;
+    event.waitUntil(
+        clients.matchAll({type: 'window'}).then(function(windowClients) {
+            // Check if there is already a window/tab open with the target URL
+            for (var i = 0; i < windowClients.length; i++) {
+                var client = windowClients[i];
+                if (client.url === url && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // If no window/tab is already open, open a new one
+            if (clients.openWindow) {
+                return clients.openWindow(url);
+            }
+        })
+    );
+});

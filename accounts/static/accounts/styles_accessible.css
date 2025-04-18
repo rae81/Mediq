@@ -1,0 +1,13 @@
+/* styles_accessible.css (accessible mode) */
+body {
+    background-color: #000;
+    font-size: 20px;
+    color: #fff;
+    font-family: Arial, sans-serif;
+}
+header {
+    background-color: #FFD700;
+    color: #000;
+    padding: 20px;
+    text-align: center;
+}

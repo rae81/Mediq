@@ -1,0 +1,430 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile Settings - MedIQ</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        {% if request.session.high_contrast %}
+            body {
+                background-color: #000;
+                color: #fff;
+                font-family: {% if request.session.alternative_font %}'Oswald', sans-serif{% else %}'Poppins', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"22" }}px;
+            }
+            .card {
+                background-color: #000;
+                border: 2px solid #ffea00;
+                border-radius: 15px;
+                box-shadow: 0 0 20px rgba(255,234,0,0.4);
+            }
+            .card-header {
+                background-color: #ffea00;
+                color: #000;
+                font-weight: bold;
+                border-radius: 13px 13px 0 0 !important;
+            }
+            .form-control {
+                background-color: #333;
+                color: #fff;
+                border-color: #ffea00;
+                border-radius: 10px;
+            }
+            .form-control:focus {
+                background-color: #444;
+                color: #fff;
+                border-color: #ffea00;
+                box-shadow: 0 0 0 0.2rem rgba(255,234,0,0.25);
+            }
+            .btn-primary {
+                background-color: #ffea00;
+                color: #000;
+                border: none;
+                border-radius: 10px;
+                font-weight: 600;
+            }
+            .btn-primary:hover {
+                background-color: #e6d200;
+                color: #000;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(255,234,0,0.4);
+            }
+            .btn-secondary {
+                background-color: #333;
+                border-color: #ffea00;
+                color: #fff;
+                border-radius: 10px;
+            }
+            .btn-secondary:hover {
+                background-color: #555;
+                border-color: #ffea00;
+            }
+            label {
+                color: #ffea00;
+            }
+            .nav-tabs .nav-link.active {
+                background-color: #000;
+                border-color: #ffea00 #ffea00 #000;
+                color: #ffea00;
+            }
+            .nav-tabs .nav-link {
+                color: #fff;
+            }
+        {% elif request.session.dark_mode %}
+            body {
+                background-color: #333;
+                color: #fff;
+                font-family: {% if request.session.alternative_font %}'Oswald', sans-serif{% else %}'Poppins', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"20" }}px;
+            }
+            .card {
+                background-color: #444;
+                border: 2px solid #007BFF;
+                border-radius: 15px;
+                box-shadow: 0 0 20px rgba(0,0,0,0.4);
+            }
+            .card-header {
+                background-color: #007BFF;
+                color: #fff;
+                font-weight: bold;
+                border-radius: 13px 13px 0 0 !important;
+            }
+            .form-control {
+                background-color: #555;
+                color: #fff;
+                border-color: #007BFF;
+                border-radius: 10px;
+            }
+            .form-control:focus {
+                background-color: #666;
+                color: #fff;
+                border-color: #007BFF;
+                box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+            }
+            .btn-primary {
+                background-color: #007BFF;
+                color: #fff;
+                border: none;
+                border-radius: 10px;
+                font-weight: 600;
+            }
+            .btn-primary:hover {
+                background-color: #0069d9;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0,123,255,0.4);
+            }
+            .btn-secondary {
+                background-color: #555;
+                border-color: #007BFF;
+                border-radius: 10px;
+            }
+            label {
+                color: #ccc;
+            }
+            .nav-tabs .nav-link.active {
+                background-color: #444;
+                border-color: #007BFF #007BFF #444;
+                color: #fff;
+            }
+            .nav-tabs .nav-link {
+                color: #ccc;
+            }
+        {% else %}
+            body {
+                background-color: #f4f7fc;
+                color: #333;
+                font-family: {% if request.session.alternative_font %}'Oswald', sans-serif{% else %}'Poppins', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"16" }}px;
+            }
+            .card {
+                background-color: #fff;
+                border: none;
+                border-radius: 15px;
+                box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+            }
+            .card-header {
+                background-color: #007BFF;
+                color: white;
+                font-weight: bold;
+                border-radius: 15px 15px 0 0 !important;
+                padding: 20px;
+            }
+            .form-control {
+                border-radius: 10px;
+                border: 1px solid #e0e6ed;
+                padding: 12px 15px;
+                transition: all 0.3s;
+            }
+            .form-control:focus {
+                border-color: #007BFF;
+                box-shadow: 0 0 0 0.2rem rgba(0,123,255,.15);
+            }
+            .btn-primary {
+                background-color: #007BFF;
+                border: none;
+                border-radius: 10px;
+                padding: 12px 20px;
+                font-weight: 600;
+                transition: all 0.3s;
+            }
+            .btn-primary:hover {
+                background-color: #0069d9;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0,123,255,0.2);
+            }
+            .btn-secondary {
+                border-radius: 10px;
+                padding: 12px 20px;
+            }
+            label {
+                font-weight: 500;
+                color: #555;
+                margin-bottom: 8px;
+            }
+        {% endif %}
+        
+        .page-title {
+            margin-bottom: 30px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .page-title:after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100px;
+            height: 3px;
+            background: {% if request.session.high_contrast %}#ffea00{% elif request.session.dark_mode %}#007BFF{% else %}#007BFF{% endif %};
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        .btn {
+            font-size: 1rem;
+            padding: 12px 30px;
+            transition: all 0.3s;
+        }
+        
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .profile-picture {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 30px;
+            border: 4px solid {% if request.session.high_contrast %}#ffea00{% elif request.session.dark_mode %}#007BFF{% else %}#007BFF{% endif %};
+        }
+        
+        .profile-info h2 {
+            margin-bottom: 5px;
+        }
+        
+        .profile-info p {
+            color: {% if request.session.high_contrast %}#ccc{% elif request.session.dark_mode %}#ccc{% else %}#666{% endif %};
+            margin-bottom: 0;
+        }
+        
+        .nav-tabs {
+            margin-bottom: 20px;
+            border-bottom-color: {% if request.session.high_contrast %}#ffea00{% elif request.session.dark_mode %}#007BFF{% else %}#007BFF{% endif %};
+        }
+        
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 20px;
+            }
+            
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .profile-picture {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-lg-10 offset-lg-1">
+                <h1 class="page-title">Profile Settings</h1>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0"><i class="fas fa-user-cog mr-2"></i> Manage Your Account</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="profile-header">
+                            {% if user.profile.profile_picture %}
+                                <img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture" class="profile-picture">
+                            {% else %}
+                                <img src="{% static 'accounts/default_profile.png' %}" alt="Default Profile Picture" class="profile-picture">
+                            {% endif %}
+                            
+                            <div class="profile-info">
+                                <h2>{{ user.get_full_name|default:user.username }}</h2>
+                                <p>{{ user.email }}</p>
+                                {% if user.profile.age %}
+                                    <p>Age: {{ user.profile.age }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="account-tab" data-toggle="tab" href="#account" role="tab" aria-controls="account" aria-selected="true">
+                                    <i class="fas fa-user mr-2"></i> Account Information
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="security-tab" data-toggle="tab" href="#security" role="tab" aria-controls="security" aria-selected="false">
+                                    <i class="fas fa-lock mr-2"></i> Security
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="photo-tab" data-toggle="tab" href="#photo" role="tab" aria-controls="photo" aria-selected="false">
+                                    <i class="fas fa-camera mr-2"></i> Profile Picture
+                                </a>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="profileTabsContent">
+                            <!-- Account Information Tab -->
+                            <div class="tab-pane fade show active" id="account" role="tabpanel" aria-labelledby="account-tab">
+                                <form method="post" action="{% url 'profile_update' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="form_type" value="account_info">
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="username">Username</label>
+                                                <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="email">Email</label>
+                                                <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="first_name">First Name</label>
+                                                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="last_name">Last Name</label>
+                                                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="age">Age</label>
+                                                <input type="number" class="form-control" id="age" name="age" value="{{ user.profile.age|default:'' }}" min="0">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="phone">Phone Number</label>
+                                                <input type="text" class="form-control" id="phone" name="phone" value="{{ user.profile.phone|default:'' }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save mr-2"></i> Save Changes
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <!-- Security Tab -->
+                            <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
+                                <form method="post" action="{% url 'profile_update' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="form_type" value="change_password">
+                                    
+                                    <div class="form-group">
+                                        <label for="current_password">Current Password</label>
+                                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="new_password">New Password</label>
+                                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="confirm_password">Confirm New Password</label>
+                                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-key mr-2"></i> Change Password
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <!-- Profile Picture Tab -->
+                            <div class="tab-pane fade" id="photo" role="tabpanel" aria-labelledby="photo-tab">
+                                <form method="post" action="{% url 'profile_update' %}" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="form_type" value="profile_picture">
+                                    
+                                    <div class="form-group">
+                                        <label for="profile_picture">Upload New Profile Picture</label>
+                                        <input type="file" class="form-control-file" id="profile_picture" name="profile_picture" accept="image/*">
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-upload mr-2"></i> Update Profile Picture
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

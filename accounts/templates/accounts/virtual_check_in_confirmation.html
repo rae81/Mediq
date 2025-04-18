@@ -1,0 +1,123 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check-In Confirmation</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    
+    <!-- Inline CSS with conditional font and size changes only -->
+    <style>
+        {% if request.session.high_contrast %}
+            @import url('https://fonts.googleapis.com/css?family=Raleway:400,700&display=swap');
+            body {
+                background-color: #000;
+                color: #fff;
+                font-family: {% if request.session.alternative_font %}'Oswald', sans-serif{% else %}'Raleway', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"22" }}px;
+            }
+            .confirmation-container {
+                margin-top: 50px;
+                padding: 30px;
+                border: 2px solid #FFD700;
+                border-radius: 10px;
+                background-color: #000;
+                color: #fff;
+                box-shadow: 0 0 20px rgba(255,234,0,0.7);
+            }
+            .profile-info p {
+                font-size: 1.4rem;
+                margin: 5px 0;
+                color: #fff;
+            }
+        {% elif request.session.dark_mode %}
+            @import url('https://fonts.googleapis.com/css?family=Raleway:400,700&display=swap');
+            body {
+                background-color: #333;
+                color: #fff;
+                font-family: {% if request.session.alternative_font %}'Oswald', sans-serif{% else %}'Raleway', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"20" }}px;
+            }
+            .confirmation-container {
+                margin-top: 50px;
+                padding: 30px;
+                border: 2px solid #FFD700;
+                border-radius: 10px;
+                background-color: #333;
+                color: #fff;
+                box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            }
+            .profile-info p {
+                font-size: 1.3rem;
+                margin: 5px 0;
+                color: #fff;
+            }
+        {% elif request.session.alternative_font or request.session.font_size %}
+            @import url('https://fonts.googleapis.com/css?family=Oswald:400,700&display=swap');
+            body {
+                background-color: #f4f4f4;
+                color: #333;
+                font-family: 'Oswald', sans-serif;
+                font-size: {{ request.session.font_size|default:"20" }}px;
+            }
+            .confirmation-container {
+                margin-top: 50px;
+                padding: 30px;
+                border: 2px solid #007BFF;
+                border-radius: 10px;
+                background-color: #f4f4f4;
+                color: #333;
+                box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            }
+            .profile-info p {
+                font-size: 1.3rem;
+                margin: 5px 0;
+                color: #333;
+            }
+        {% else %}
+            /* Normal mode */
+            body {
+                background-color: #f4f4f4;
+                color: #333;
+                font-family: Arial, sans-serif;
+                font-size: {{ request.session.font_size|default:"16" }}px;
+            }
+            .confirmation-container {
+                margin-top: 50px;
+                padding: 30px;
+                border: 2px solid #007BFF;
+                border-radius: 10px;
+                background-color: #fff;
+                color: #333;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            }
+            .profile-info p {
+                font-size: 1.1rem;
+                margin: 5px 0;
+                color: #333;
+            }
+        {% endif %}
+    </style>
+</head>
+<body>
+    <div class="container confirmation-container text-center">
+        <h2 class="mb-4">Check-In Successful!</h2>
+        {% if checkin.user.profile.profile_picture %}
+            <img src="{{ checkin.user.profile.profile_picture.url }}" alt="Profile Picture" class="profile-pic" style="width:150px;height:150px;object-fit:cover;border-radius:50%;border:4px solid {% if request.session.high_contrast or request.session.dark_mode %}#FFD700{% else %}#007BFF{% endif %};margin-bottom:20px;">
+        {% else %}
+            <img src="{% static 'accounts/default_profile.png' %}" alt="Default Profile Picture" class="profile-pic" style="width:150px;height:150px;object-fit:cover;border-radius:50%;border:4px solid {% if request.session.high_contrast or request.session.dark_mode %}#FFD700{% else %}#007BFF{% endif %};margin-bottom:20px;">
+        {% endif %}
+        <div class="profile-info">
+            <p><strong>Name:</strong> {{ checkin.user.username }}</p>
+            <p><strong>Email:</strong> {{ checkin.user.email }}</p>
+            <p><strong>Age:</strong> {{ checkin.user.profile.age }}</p>
+            <p><strong>Phone:</strong> {{ checkin.user.profile.phone }}</p>
+            <p><strong>Check-In Time:</strong> {{ checkin.check_in_time }}</p>
+        </div>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary mt-3">Back to Dashboard</a>
+    </div>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

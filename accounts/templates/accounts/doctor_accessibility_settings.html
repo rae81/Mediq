@@ -1,0 +1,132 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block content %}
+<style>
+    {% with font_size=request.session.font_size|default:22 %}
+    body {
+        {% if request.session.high_contrast %}
+            background-color: #000;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+        {% elif request.session.dark_mode %}
+            background-color: #333;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+        {% else %}
+            background-color: #f4f4f4;
+            color: #333;
+            font-family: {% if request.session.alternative_font %}"Poppins", sans-serif{% else %}Arial, sans-serif{% endif %};
+        {% endif %}
+        font-size: {{ font_size }}px;
+    }
+
+    .card {
+        max-width: 600px;
+        margin: 50px auto;
+        border-radius: 12px;
+        padding: 30px;
+
+        {% if request.session.high_contrast %}
+            background-color: #000;
+            border: 2px solid #FFD700;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
+        {% elif request.session.dark_mode %}
+            background-color: #444;
+            border: 2px solid #FFD700;
+            color: #fff;
+        {% else %}
+            background-color: #fff;
+            border: 2px solid #b30000;
+            color: #333;
+        {% endif %}
+    }
+
+    .card-header {
+        {% if request.session.high_contrast %}
+            background-color: #FFD700;
+            color: #000;
+        {% elif request.session.dark_mode %}
+            background-color: #b30000;
+            color: #fff;
+        {% else %}
+            background-color: #b30000;
+            color: #fff;
+        {% endif %}
+        font-size: calc({{ font_size }}px + 4px);
+        font-weight: bold;
+        text-align: center;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        padding: 15px;
+    }
+
+    .form-check-label {
+        font-size: {{ font_size }}px;
+        color: inherit;
+    }
+
+    .form-check-input {
+        transform: scale(1.3);
+        margin-right: 10px;
+    }
+
+    .form-group label {
+        font-size: {{ font_size }}px;
+        color: inherit;
+    }
+
+    #fontSizeValue {
+        font-weight: bold;
+    }
+
+    .btn-danger {
+        font-size: {{ font_size }}px;
+        padding: 10px 24px;
+        font-weight: bold;
+    }
+
+    .text-muted {
+        color: {% if request.session.high_contrast or request.session.dark_mode %}#ccc{% else %}#666{% endif %} !important;
+        font-size: calc({{ font_size }}px - 2px);
+    }
+    {% endwith %}
+</style>
+
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header">
+            Doctor Accessibility Settings
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="dark_mode" id="dark_mode" {% if request.session.dark_mode %}checked{% endif %}>
+                    <label class="form-check-label" for="dark_mode">Enable Dark Mode</label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="large_text" id="large_text" {% if request.session.large_text %}checked{% endif %}>
+                    <label class="form-check-label" for="large_text">Enable Larger Text (Predefined)</label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="alternative_font" id="alternative_font" {% if request.session.alternative_font %}checked{% endif %}>
+                    <label class="form-check-label" for="alternative_font">Use Alternative Font</label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="high_contrast" id="high_contrast" {% if request.session.high_contrast %}checked{% endif %}>
+                    <label class="form-check-label" for="high_contrast">Enable High Contrast Mode</label>
+                </div>
+                <div class="form-group mt-3">
+                    <label for="font_size">Font Size: <span id="fontSizeValue">{{ request.session.font_size }}</span>px</label>
+                    <input type="range" name="font_size" id="font_size" class="form-control-range" min="16" max="32" value="{{ request.session.font_size }}" oninput="document.getElementById('fontSizeValue').innerText = this.value">
+                </div>
+                <p class="text-muted mt-2"><em>Note: Dark Mode and High Contrast cannot be active together.</em></p>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-danger mt-3">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
