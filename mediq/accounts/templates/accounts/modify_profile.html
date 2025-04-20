@@ -1,0 +1,74 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block content %}
+<style>
+    {% if request.session.high_contrast %}
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            font-size: {{ request.session.font_size }}px;
+        }
+        .form-control, .form-check-label {
+            background-color: #000;
+            color: #fff;
+            border: 1px solid #FFD700;
+        }
+        .btn-danger {
+            background-color: #FFD700;
+            color: #000;
+        }
+        .btn-secondary {
+            background-color: #999;
+            color: #000;
+        }
+    {% elif request.session.dark_mode %}
+        body {
+            background-color: #333;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            font-size: {{ request.session.font_size }}px;
+        }
+        .form-control, .form-check-label {
+            background-color: #444;
+            color: #fff;
+            border: 1px solid #FFD700;
+        }
+        .btn-danger {
+            background-color: #FFD700;
+            color: #000;
+        }
+        .btn-secondary {
+            background-color: #bbb;
+            color: #000;
+        }
+    {% else %}
+        body {
+            background-color: #f4f4f4;
+            color: #333;
+            font-family: {% if request.session.alternative_font %}"Poppins", sans-serif{% else %}Arial, sans-serif{% endif %};
+            font-size: {{ request.session.font_size }}px;
+        }
+        .btn-danger {
+            background-color: #b30000;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+    {% endif %}
+</style>
+
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Edit Your Profile</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="mt-4 text-center">
+            <button type="submit" class="btn btn-danger mr-3">💾 Save Changes</button>
+            <a href="{% url 'doctor_dashboard' %}" class="btn btn-secondary">↩ Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

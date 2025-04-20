@@ -1,0 +1,15 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+  <h2>Your Doctors</h2>
+  <ul>
+    {% for doc in doctors %}
+      <li>
+        <a href="{% url 'patient_chat_detail' doc.id %}">
+          Dr. {{ doc.name }} ({{ doc.specialty }})
+        </a>
+      </li>
+    {% empty %}
+      <li>You haven’t messaged any doctors yet.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

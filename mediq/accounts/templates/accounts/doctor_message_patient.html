@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Doctor ↔ Patient Chat</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    /* reuse your accessibility & color-mode rules… */
+    .chat-window { height:400px; overflow-y:auto; margin-bottom:1rem; }
+    .from-doctor { text-align:right; }
+    .from-patient { text-align:left; }
+    .from-doctor .bubble { background:#007bff; color:#fff; }
+    .from-patient .bubble { background:#e9ecef; }
+    .bubble { display:inline-block; padding:.5rem 1rem; border-radius:1rem; margin-bottom:.5rem; }
+  </style>
+</head>
+<body>
+<main class="container py-5">
+  <h1 class="mb-4">Chat: Dr. {{ doctor.name }} ↔ {{ patient.get_full_name }}</h1>
+
+  <div class="chat-window border p-3" aria-live="polite">
+    {% if chat_history %}
+      {% for msg in chat_history %}
+        <div class="{% if msg.sender_doctor %}from-doctor{% else %}from-patient{% endif %}">
+          <div class="bubble">
+            <strong>
+              {{ msg.sender_doctor.name if msg.sender_doctor else msg.sender_user.get_full_name }}
+            </strong><br>
+            {{ msg.content }}
+            <br><small class="text-muted">{{ msg.timestamp|date:"M d, H:i" }}</small>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">No conversation yet.</p>
+    {% endif %}
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.receiver_user }} {# hidden, set in view to current patient #}
+    <div class="form-group">
+      {{ form.content.label_tag }}
+      {{ form.content }}
+      {{ form.content.errors }}
+    </div>
+    <button class="btn btn-primary">
+      <i class="fas fa-paper-plane"></i> Send
+    </button>
+  </form>
+</main>
+</body>
+</html>

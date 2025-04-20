@@ -1,0 +1,472 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MedIQ Dashboard</title>
+    <!-- Bootstrap CSS and Font Awesome -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Oswald:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Inline CSS with conditional styling -->
+    <style>
+        {% if request.session.high_contrast %}
+            body {
+                background-color: #000;
+                color: #fff;
+                font-family: {% if request.session.alternative_font %}'Oswald', sans-serif{% else %}'Roboto', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"22" }}px;
+            }
+            .welcome-header { 
+                background-color: #ffea00;
+                color: #000;
+                padding: 30px;
+                text-align: center;
+                border-radius: 8px;
+                margin-bottom: 30px;
+                position: relative;
+            }
+            .dashboard-item {
+                background-color: #000;
+                border: 2px solid #ffea00;
+                border-radius: 8px;
+                padding: 30px;
+                text-align: center;
+                box-shadow: 0 0 10px rgba(255,234,0,0.5);
+                transition: transform 0.2s, border-color 0.2s;
+                margin-bottom: 20px;
+                color: #fff;
+                position: relative;
+                overflow: hidden;
+            }
+            .dashboard-item:hover {
+                transform: translateY(-5px);
+                border-color: #fff;
+            }
+            .dashboard-title {
+                margin-top: 15px;
+                font-size: 1.5rem;
+                font-weight: bold;
+                color: #fff;
+            }
+            .dashboard-desc {
+                font-size: 1rem;
+                color: #ccc;
+                margin-top: 5px;
+            }
+            .dashboard-icon {
+                font-size: 2.5rem;
+                color: #ffea00;
+            }
+            .notification-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background-color: #ff3333;
+                color: #fff;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                text-align: center;
+                line-height: 24px;
+                font-size: 0.8rem;
+                font-weight: bold;
+            }
+            .section-title {
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #ffea00;
+                color: #fff;
+            }
+            .upcoming-appointment {
+                background-color: #222;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 20px;
+                position: relative;
+                border: 1px solid #ffea00;
+            }
+            .btn-danger {
+                background-color: #ff3333;
+                border: none;
+            }
+            .btn-outline-primary {
+                color: #ffea00;
+                border-color: #ffea00;
+            }
+            .btn-outline-primary:hover {
+                background-color: #ffea00;
+                color: #000;
+            }
+        {% elif request.session.dark_mode %}
+            body {
+                background-color: #333;
+                color: #fff;
+                font-family: {% if request.session.alternative_font %}'Oswald', sans-serif{% else %}'Roboto', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"20" }}px;
+            }
+            .welcome-header {
+                background-color: #444;
+                color: #fff;
+                padding: 30px;
+                text-align: center;
+                border-radius: 8px;
+                margin-bottom: 30px;
+                position: relative;
+            }
+            .dashboard-item {
+                background-color: #222;
+                border: 2px solid #007BFF;
+                border-radius: 8px;
+                padding: 30px;
+                text-align: center;
+                box-shadow: 0 0 10px rgba(0,0,0,0.3);
+                transition: transform 0.2s, border-color 0.2s;
+                margin-bottom: 20px;
+                color: #fff;
+                position: relative;
+                overflow: hidden;
+            }
+            .dashboard-item:hover {
+                transform: translateY(-5px);
+                border-color: #fff;
+            }
+            .dashboard-title {
+                margin-top: 15px;
+                font-size: 1.5rem;
+                font-weight: bold;
+                color: #fff;
+            }
+            .dashboard-desc {
+                font-size: 1rem;
+                color: #ccc;
+                margin-top: 5px;
+            }
+            .dashboard-icon {
+                font-size: 2.5rem;
+                color: #007BFF;
+            }
+            .notification-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background-color: #dc3545;
+                color: #fff;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                text-align: center;
+                line-height: 24px;
+                font-size: 0.8rem;
+                font-weight: bold;
+            }
+            .section-title {
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #007BFF;
+                color: #fff;
+            }
+            .upcoming-appointment {
+                background-color: #333;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 20px;
+                position: relative;
+                border: 1px solid #007BFF;
+            }
+        {% else %}
+            body {
+                background-color: #f4f4f4;
+                color: #333;
+                font-family: {% if request.session.alternative_font %}"Oswald", sans-serif{% else %}Arial, sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"16" }}px;
+            }
+            .welcome-header {
+                background-color: #007BFF;
+                color: white;
+                padding: 30px;
+                text-align: center;
+                border-radius: 8px;
+                margin-bottom: 30px;
+                position: relative;
+            }
+            .dashboard-item {
+                background-color: #fff;
+                border: 2px solid #007BFF;
+                border-radius: 8px;
+                padding: 30px;
+                text-align: center;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                transition: transform 0.2s, border-color 0.2s;
+                margin-bottom: 20px;
+                color: #333;
+                position: relative;
+                overflow: hidden;
+            }
+            .dashboard-item:hover {
+                transform: translateY(-5px);
+                border-color: #0056b3;
+            }
+            .dashboard-title {
+                margin-top: 15px;
+                font-size: 1.2rem;
+                font-weight: bold;
+                color: #333;
+            }
+            .dashboard-desc {
+                font-size: 0.9rem;
+                color: #555;
+                margin-top: 5px;
+            }
+            .dashboard-icon {
+                font-size: 2.5rem;
+                color: #007BFF;
+            }
+            .notification-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background-color: #dc3545;
+                color: #fff;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                text-align: center;
+                line-height: 24px;
+                font-size: 0.8rem;
+                font-weight: bold;
+            }
+            .section-title {
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #007BFF;
+                color: #333;
+            }
+            .upcoming-appointment {
+                background-color: #f9f9f9;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 20px;
+                position: relative;
+                border: 1px solid #dee2e6;
+            }
+        {% endif %}
+        
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fff;
+            margin-top: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .feature-section {
+            margin-bottom: 30px;
+        }
+        
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Header with welcome message, profile picture, and logout button -->
+        <div class="position-relative mb-4">
+            <div class="welcome-header">
+                <h1>Welcome, {{ user.username }}!</h1>
+                {% if user.profile.profile_picture %}
+                    <img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture" class="profile-pic">
+                {% else %}
+                    <img src="{% static 'accounts/default_profile.png' %}" alt="Default Profile Picture" class="profile-pic">
+                {% endif %}
+                <a href="{% url 'logout' %}" class="btn btn-danger logout-btn">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Log Out
+                </a>
+            </div>
+        </div>
+        
+        <!-- Upcoming Appointment Summary (if any) -->
+        {% if upcoming_appointment %}
+            <div class="upcoming-appointment">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">
+                        <i class="fas fa-calendar-day mr-2"></i> Your Next Appointment
+                    </h2>
+                    <span style="font-weight: bold;">{{ upcoming_appointment.date }} at {{ upcoming_appointment.time }}</span>
+                </div>
+                <p class="mt-2 mb-0">
+                    <strong>Doctor:</strong> {{ upcoming_appointment.doctor }} ({{ upcoming_appointment.specialty }})
+                </p>
+                <div class="text-right mt-2">
+                    <a href="{% url 'appointment_reminder' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-eye mr-1"></i> View Details
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Integrated Medical Appointment System (Featured) -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <a href="{% url 'smart_scheduler' %}" style="text-decoration: none;">
+                    <div class="dashboard-item" style="border-width: 3px; background-color: {% if request.session.high_contrast %}#333{% elif request.session.dark_mode %}#2a2a2a{% else %}#f8f9ff{% endif %};">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                <i class="fas fa-laptop-medical dashboard-icon" style="font-size: 3.5rem;"></i>
+                            </div>
+                            <div class="col-md-10">
+                                <div class="dashboard-title" style="text-align: left; font-size: 1.5rem;">AI Scheduler & Calendar</div>
+                                <div class="dashboard-desc" style="text-align: left;">Use our intelligent assistant and view doctor availability.</div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Health Management Features -->
+        <div class="feature-section">
+            <h2 class="section-title"><i class="fas fa-heartbeat mr-2"></i> Health Management</h2>
+            <div class="row">
+                <!-- Virtual Check-In -->
+                <div class="col-md-6">
+                    <a href="{% url 'virtual_check_in_list' %}" style="text-decoration: none;">
+                        <div class="dashboard-item">
+                            <i class="fas fa-user-check dashboard-icon"></i>
+                            <div class="dashboard-title">Virtual Check-In</div>
+                            <div class="dashboard-desc">View appointments & check in online.</div>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Book Appointment (Direct Booking link) -->
+                <div class="col-md-6">
+                    <a href="{% url 'book_appointment_direct' %}" style="text-decoration: none;">
+                        <div class="dashboard-item">
+                            <i class="fas fa-calendar-plus dashboard-icon"></i>
+                            <div class="dashboard-title">Book Appointment</div>
+                            <div class="dashboard-desc">Use our integrated scheduling system.</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+ <!-- Contact Doctor (Messaging Feature) -->
+<div class="col-md-6">
+    <a href="{% url 'contact_doctor' %}" style="text-decoration: none;">
+        <div class="dashboard-item">
+            <i class="fas fa-comments dashboard-icon"></i>
+            <div class="dashboard-title">Message Doctor</div>
+            <div class="dashboard-desc">Contact your doctor directly about your appointment.</div>
+        </div>
+    </a>
+</div>
+           
+            <div class="row mt-4">
+                <!-- Appointment Reminder -->
+                <div class="col-md-6">
+                    <a href="{% url 'appointment_reminder' %}" style="text-decoration: none;">
+                        <div class="dashboard-item">
+                            {% if pending_reminders %}
+                                <div class="notification-badge">{{ pending_reminders }}</div>
+                            {% endif %}
+                            <i class="fas fa-bell dashboard-icon"></i>
+                            <div class="dashboard-title">Appointment Reminders</div>
+                            <div class="dashboard-desc">Never miss an appointment.</div>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Medical Calendar -->
+                <div class="col-md-6">
+                    <a href="{% url 'calendar' %}" style="text-decoration: none;">
+                        <div class="dashboard-item">
+                            <i class="fas fa-calendar-alt dashboard-icon"></i>
+                            <div class="dashboard-title">My Calendar</div>
+                            <div class="dashboard-desc">View and manage your health schedule.</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Financial Management Features -->
+        <div class="feature-section">
+            <h2 class="section-title"><i class="fas fa-file-invoice-dollar mr-2"></i> Financial Management</h2>
+            <div class="row">
+                <div class="col-md-12">
+                    <a href="{% url 'billing_insurance' %}" style="text-decoration: none;">
+                        <div class="dashboard-item">
+                            {% if unpaid_bills %}
+                                <div class="notification-badge">{{ unpaid_bills }}</div>
+                            {% endif %}
+                            <i class="fas fa-file-invoice-dollar dashboard-icon"></i>
+                            <div class="dashboard-title">Billing & Insurance</div>
+                            <div class="dashboard-desc">Manage your billing details, insurance information, and verifycoverage.</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings & Preferences -->
+        <div class="feature-section">
+            <h2 class="section-title">
+                <i class="fas fa-cog mr-2"></i> Settings & Preferences
+            </h2>
+            <div class="row">
+                <!-- Accessibility Settings -->
+                <div class="col-md-6">
+                    <a href="{% url 'accessibility_settings' %}" style="text-decoration: none;">
+                        <div class="dashboard-item">
+                            <i class="fas fa-universal-access dashboard-icon"></i>
+                            <div class="dashboard-title">Accessibility Settings</div>
+                            <div class="dashboard-desc">Customize font size, contrast, and more to fit your needs.</div>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- User Profile -->
+                <div class="col-md-6">
+                    <a href="{% url 'profile' %}" style="text-decoration: none;">
+                        <div class="dashboard-item">
+                            <i class="fas fa-user-cog dashboard-icon"></i>
+                            <div class="dashboard-title">Profile Settings</div>
+                            <div class="dashboard-desc">Update your personal information and preferences.</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Notification Settings -->
+            <div class="col-md-6">
+                <a href="{% url 'notification_settings' %}" style="text-decoration: none;">
+                    <div class="dashboard-item">
+                        <i class="fas fa-bell dashboard-icon"></i>
+                        <div class="dashboard-title">Notification Settings</div>
+                        <div class="dashboard-desc">Manage how and when you receive notifications.</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="bg-light py-3 mt-5">
+        <div class="container text-center">
+            <p class="mb-0 text-muted">© 2025 MedIQ Healthcare. All rights reserved.</p>
+            <small class="text-muted">Version 2.1.0</small>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

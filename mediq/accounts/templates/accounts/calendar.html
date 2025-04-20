@@ -1,0 +1,191 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Appointment Calendar</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet"/>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    {% if request.session.high_contrast %}
+        body {
+            background-color: #000 !important;
+            color: #fff !important;
+            font-family: {% if request.session.alternative_font %}'Oswald',sans-serif{% else %}'Roboto',sans-serif{% endif %} !important;
+            font-size: {{ request.session.font_size|default:"22" }}px !important;
+        }
+        .fc-card, .card-header, .btn-secondary {
+            background-color: #000 !important;
+            color: #fff !important;
+            border-color: #ffea00 !important;
+        }
+        .btn-secondary {
+            background-color: #ffea00 !important;
+            color: #000 !important;
+        }
+    {% elif request.session.dark_mode %}
+        body {
+            background-color: #333 !important;
+            color: #fff !important;
+            font-family: {% if request.session.alternative_font %}'Oswald',sans-serif{% else %}'Roboto',sans-serif{% endif %} !important;
+            font-size: {{ request.session.font_size|default:"20" }}px !important;
+        }
+        .fc-card, .card-header, .btn-secondary {
+            background-color: #444 !important;
+            color: #fff !important;
+            border-color: #007BFF !important;
+        }
+        .btn-secondary {
+            background-color: #007BFF !important;
+            color: #fff !important;
+        }
+    {% else %}
+        body {
+            background-color: #f4f7fc !important;
+            color: #333 !important;
+            font-family: {% if request.session.alternative_font %}"Oswald",sans-serif{% else %}Arial,sans-serif{% endif %} !important;
+            font-size: {{ request.session.font_size|default:"16" }}px !important;
+        }
+        .fc-card, .card-header, .btn-secondary {
+            background-color: #fff !important;
+            color: #333 !important;
+            border-color: #ddd !important;
+        }
+        .btn-secondary {
+            background-color: #6c757d !important;
+            color: #fff !important;
+        }
+    {% endif %}
+
+    .fc-card {
+      max-width: 900px;
+      margin: 40px auto;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .fc-card-body {
+      padding: 20px;
+    }
+    
+    /* Add styles for the legend */
+    .calendar-legend {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 0 10px;
+    }
+    .legend-color {
+      width: 15px;
+      height: 15px;
+      border-radius: 3px;
+      margin-right: 5px;
+    }
+    .legend-color.my-appointment { background-color: #007bff; }
+    .legend-color.other-appointment { background-color: #ffc107; }
+    .legend-color.busy { background-color: #dc3545; }
+    
+    /* Filter button styling */
+    .filter-controls {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary mb-3">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+
+    <div class="fc-card">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Appointment Calendar</h4>
+      </div>
+      <div class="fc-card-body">
+        <!-- Add legend -->
+        <div class="calendar-legend">
+          <div class="legend-item">
+            <div class="legend-color my-appointment"></div>
+            <span>My Appointments</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color other-appointment"></div>
+            <span>Other Appointments</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color busy"></div>
+            <span>Busy Times</span>
+          </div>
+        </div>
+        
+        <!-- Add filter button -->
+        <div class="filter-controls">
+          <button id="filterToggleBtn" class="btn btn-primary mb-3">
+            Show Only My Appointments
+          </button>
+        </div>
+        
+        <div id="calendar"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var calendarEl = document.getElementById('calendar');
+      var filterBtn = document.getElementById('filterToggleBtn');
+      var showOnlyMyAppointments = false;
+      var allEvents = {{ events_json|safe }};
+      
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'timeGridWeek,dayGridMonth'
+        },
+        allDaySlot: false,
+        events: allEvents,
+        eventTimeFormat: {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        },
+        dayMaxEventRows: true
+      });
+      
+      calendar.render();
+      
+      // Add filter functionality
+      filterBtn.addEventListener('click', function() {
+        showOnlyMyAppointments = !showOnlyMyAppointments;
+        
+        if (showOnlyMyAppointments) {
+          // Filter to show only user's appointments
+          calendar.getEventSources().forEach(source => source.remove());
+          calendar.addEventSource(allEvents.filter(event => 
+            event.extendedProps && event.extendedProps.type === 'my-appointment'
+          ));
+          filterBtn.textContent = 'Show All Appointments';
+          filterBtn.classList.remove('btn-primary');
+          filterBtn.classList.add('btn-outline-primary');
+        } else {
+          // Show all events
+          calendar.getEventSources().forEach(source => source.remove());
+          calendar.addEventSource(allEvents);
+          filterBtn.textContent = 'Show Only My Appointments';
+          filterBtn.classList.remove('btn-outline-primary');
+          filterBtn.classList.add('btn-primary');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

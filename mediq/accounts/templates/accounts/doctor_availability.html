@@ -1,0 +1,402 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block extra_head %}
+  <!-- FullCalendar CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --primary-color: #4a6fa5;
+      --secondary-color: #e9ecef;
+      --text-color: #333;
+      --bg-color: #f5f9fa;
+      --card-bg: #fff;
+      --border-color: #ddd;
+      --booked-color: #ffc107;
+      --busy-color: #dc3545;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+    }
+    .back-button {
+      background: #444; color: #fff; text-decoration: none;
+      padding: 10px 15px; border-radius: 5px; display:inline-block;
+    }
+    .back-button:hover { background: #222; }
+    .container {
+      max-width: 1200px; margin: 0 auto; background: var(--card-bg);
+      border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,.1);
+    }
+    header {
+      background: var(--primary-color); color: #fff;
+      padding: 20px; text-align: center;
+    }
+    .calendar-container { padding: 20px; }
+    .legend { display:flex; gap:20px; margin-bottom:20px; }
+    .legend-item { display:flex; align-items:center; gap:5px; }
+    .legend-color { width:15px; height:15px; border-radius:3px; }
+    .legend-color.booked { background: var(--booked-color); }
+    .legend-color.busy   { background: var(--busy-color); }
+    #calendar {
+      border:1px solid var(--border-color);
+      border-radius:4px; margin-bottom:20px;
+    }
+    .day-view {
+      display:none; padding:20px;
+      border-top:1px solid var(--border-color);
+      margin-top:20px;
+      background: var(--card-bg);
+    }
+    .day-view-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:20px;
+    }
+    .day-view-date { font-size:1.5rem; font-weight:bold; }
+    .day-view-close {
+      background:none; border:none; font-size:1.5rem;
+      color: var(--primary-color); cursor:pointer;
+    }
+    .timeline {
+      display:grid; grid-template-columns:80px 1fr; gap:10px;
+      height:600px; overflow-y:auto;
+    }
+    .time-labels { display:flex; flex-direction:column; }
+    .time-label {
+      height:60px; display:flex; align-items:center;
+      justify-content:flex-end; padding-right:10px;
+      border-bottom:1px solid var(--border-color);
+      font-weight:bold;
+    }
+    .time-slots {
+      position:relative; display:flex; flex-direction:column;
+      border-left:1px solid var(--border-color);
+    }
+    .time-slot { height:60px; border-bottom:1px solid var(--border-color); }
+    .appointment {
+      position:absolute; left:0; width:100%; padding:5px;
+      border-radius:3px; font-size:.9rem; overflow:hidden;
+      box-shadow:0 1px 3px rgba(0,0,0,.2); z-index:1;
+    }
+    .appointment.booked { background: var(--booked-color); color:#000; }
+    .appointment.busy   { background: var(--busy-color); color:#fff; }
+    .appointment .notes {
+      margin-top:3px; font-style:italic; font-size:.8rem;
+    }
+    .controls button {
+      background: var(--primary-color); color:#fff; border:none;
+      padding:10px 15px; border-radius:5px; cursor:pointer;
+    }
+    .controls button:hover { background:#3a5a80; }
+
+    .modal {
+      display:none; position:fixed; top:0; left:0;
+      width:100%; height:100%; background:rgba(0,0,0,.5);
+      justify-content:center; align-items:center; z-index:1000;
+    }
+    .modal-content {
+      background: var(--card-bg); padding:20px; border-radius:8px;
+      width:500px; max-width:90%;
+      border:1px solid var(--border-color);
+      box-shadow:0 0 20px rgba(0,0,0,.2);
+    }
+    .modal-header {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:15px; border-bottom:1px solid var(--border-color);
+      padding-bottom:10px;
+    }
+    .modal-header h2 { margin:0; font-size:1.5rem; }
+    .modal-close {
+      background:none; border:none; font-size:1.5rem; color:#888;
+      cursor:pointer;
+    }
+    .form-group { margin-bottom:15px; }
+    .form-group label {
+      display:block; margin-bottom:5px; font-weight:bold;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width:100%; padding:8px; border:1px solid var(--border-color);
+      border-radius:4px;
+    }
+    .form-actions {
+      display:flex; justify-content:flex-end; gap:10px; margin-top:20px;
+    }
+    .form-actions button {
+      padding:8px 15px; border:none; border-radius:4px; cursor:pointer;
+    }
+    .form-actions button[type="button"] { background:#f0f0f0; }
+    .form-actions button[type="submit"] {
+      background: var(--primary-color); color:#fff;
+    }
+  </style>
+
+  <!-- Accessibility overrides -->
+  <style>
+    {% with fs=request.session.font_size|default:22 %}
+      body {
+        {% if request.session.high_contrast %}
+          background:#000; color:#fff; font-family:'Poppins',sans-serif;
+        {% elif request.session.dark_mode %}
+          background:#333; color:#fff; font-family:'Poppins',sans-serif;
+        {% endif %}
+        font-size: {{ fs }}px;
+      }
+
+      /* make container & day-view dark too */
+      .container, .day-view {
+        {% if request.session.high_contrast %}
+          background: #000 !important;
+          border-color: #FFD700 !important;
+        {% elif request.session.dark_mode %}
+          background: #333 !important;
+          border-color: #555 !important;
+        {% endif %}
+      }
+
+      /* keep header readable */
+      header {
+        {% if request.session.high_contrast %}
+          background: #FFD700 !important; color: #000 !important;
+        {% elif request.session.dark_mode %}
+          background: #4a6fa5 !important; /* leave primary color */
+        {% endif %}
+      }
+
+      /* adjust modal content too */
+      .modal-content {
+        {% if request.session.high_contrast %}
+          background: #000 !important; border:2px solid #FFD700 !important;
+        {% elif request.session.dark_mode %}
+          background: #444 !important;
+        {% endif %}
+      }
+
+      /* ensure time‑label text stays white on white container */
+      .time-label {
+        color: inherit !important;
+      }
+    {% endwith %}
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <header><h1>Doctor's Calendar</h1></header>
+    <a href="{% url 'doctor_dashboard' %}" class="back-button">
+      <i class="fas fa-arrow-left" style="margin-right:5px;"></i> Back to Dashboard
+    </a>
+    <div class="calendar-container">
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color booked"></div> Patient Appointment
+        </div>
+        <div class="legend-item">
+          <div class="legend-color busy"></div> Busy/Unavailable
+        </div>
+      </div>
+      <div id="calendar"></div>
+
+      <div class="day-view" id="day-view">
+        <div class="day-view-header">
+          <div class="day-view-date" id="day-view-date">April 15, 2025</div>
+          <button class="day-view-close" id="day-view-close">&times;</button>
+        </div>
+        <div class="timeline">
+          <div class="time-labels" id="time-labels"></div>
+          <div class="time-slots" id="time-slots"></div>
+        </div>
+        <div class="controls">
+          <button id="mark-busy">Mark Time as Busy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="busy-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Mark Time as Busy</h2>
+        <button class="modal-close" id="busy-modal-close">&times;</button>
+      </div>
+      <form id="busy-form" method="post" action="{% url 'save_doctor_busy_time' %}">
+        {% csrf_token %}
+        <input type="hidden" id="busy-date" name="date">
+        <div class="form-group">
+          <label for="busy-start">Start Time</label>
+          <select id="busy-start" name="start_time" required>
+            <option>08:00</option><option>09:00</option><option>10:00</option>
+            <option>11:00</option><option>12:00</option><option>13:00</option>
+            <option>14:00</option><option>15:00</option><option>16:00</option>
+            <option>17:00</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="busy-end">End Time</label>
+          <select id="busy-end" name="end_time" required>
+            <option>09:00</option><option>10:00</option><option>11:00</option>
+            <option>12:00</option><option>13:00</option><option>14:00</option>
+            <option>15:00</option><option>16:00</option><option>17:00</option>
+            <option>18:00</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="busy-reason">Reason</label>
+          <input type="text" id="busy-reason" name="reason"
+                 placeholder="Meeting, Lunch, etc." required>
+        </div>
+        <div class="form-group">
+          <label for="busy-notes">Notes (Optional)</label>
+          <textarea id="busy-notes" name="notes"
+                    placeholder="Additional details…"></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" id="busy-cancel">Cancel</button>
+          <button type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+  <script>
+    const calendarEl     = document.getElementById('calendar');
+    const dayView        = document.getElementById('day-view');
+    const dayViewDate    = document.getElementById('day-view-date');
+    const dayViewClose   = document.getElementById('day-view-close');
+    const timeLabels     = document.getElementById('time-labels');
+    const timeSlots      = document.getElementById('time-slots');
+    const markBusyButton = document.getElementById('mark-busy');
+    const busyModal      = document.getElementById('busy-modal');
+    const busyModalClose = document.getElementById('busy-modal-close');
+    const busyForm       = document.getElementById('busy-form');
+    const busyCancel     = document.getElementById('busy-cancel');
+    const busyDateInput  = document.getElementById('busy-date');
+    const busyStart      = document.getElementById('busy-start');
+    const busyEnd        = document.getElementById('busy-end');
+    const busyReason     = document.getElementById('busy-reason');
+    const busyNotes      = document.getElementById('busy-notes');
+
+    let selectedDate = null;
+    let appointments = [];
+
+    {% if appointments_json %}
+      appointments = JSON.parse('{{ appointments_json|safe }}');
+    {% endif %}
+    {% if busy_times_json %}
+      JSON.parse('{{ busy_times_json|safe }}').forEach(b => {
+        appointments.push({
+          id: b.id,
+          date: new Date(b.date),
+          start: b.start_time,
+          end: b.end_time,
+          reason: b.reason,
+          notes: b.notes,
+          type: 'busy'
+        });
+      });
+    {% endif %}
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const cal = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: { left:'prev,next today', center:'title', right:'' },
+        height: 'auto',
+        dayMaxEvents: 3,
+        dateClick: info => showDayView(new Date(info.date))
+      });
+      cal.render();
+      generateTimeLabels();
+
+      dayViewClose.addEventListener('click', () => dayView.style.display = 'none');
+      busyModalClose.addEventListener('click', () => busyModal.style.display = 'none');
+      busyCancel.addEventListener('click', () => busyModal.style.display = 'none');
+
+      markBusyButton.addEventListener('click', () => {
+        busyStart.value  = '09:00';
+        busyEnd.value    = '10:00';
+        busyReason.value = '';
+        busyNotes.value  = '';
+        const y = selectedDate.getFullYear();
+        const m = String(selectedDate.getMonth()+1).padStart(2,'0');
+        const d = String(selectedDate.getDate()).padStart(2,'0');
+        busyDateInput.value = `${y}-${m}-${d}`;
+        busyModal.style.display = 'flex';
+      });
+
+      // AJAX submit to keep your modal & calendar intact
+      busyForm.addEventListener('submit', e => {
+        e.preventDefault();
+        fetch("{% url 'save_doctor_busy_time' %}", {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: new FormData(busyForm)
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) location.reload();
+          else alert('Error: ' + data.message);
+        })
+        .catch(() => alert('Network error'));
+      });
+    });
+
+    function generateTimeLabels() {
+      timeLabels.innerHTML = '';
+      for (let h = 8; h <= 17; h++) {
+        const lbl = document.createElement('div');
+        lbl.className = 'time-label';
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        lbl.textContent = `${h%12||12} ${ampm}`;
+        timeLabels.appendChild(lbl);
+      }
+    }
+
+    function showDayView(date) {
+      selectedDate = date;
+      dayViewDate.textContent = date.toLocaleDateString('en-US', {
+        weekday:'long', year:'numeric', month:'long', day:'numeric'
+      });
+
+      timeSlots.innerHTML = '';
+      for (let h = 8; h <= 17; h++) {
+        const slot = document.createElement('div');
+        slot.className = 'time-slot';
+        timeSlots.appendChild(slot);
+      }
+
+      appointments.filter(a => {
+        const d = new Date(typeof a.date==='string'?a.date:a.date);
+        return d.getFullYear()===date.getFullYear() &&
+               d.getMonth()===date.getMonth() &&
+               d.getDate()===date.getDate();
+      }).forEach(e => {
+        if (!e.start) return;
+        const [sh,sm] = e.start.split(':').map(Number);
+        const [eh,em] = e.end.split(':').map(Number);
+        const top = (sh-8)*60 + sm;
+        const ht  = (eh-sh)*60 + (em-sm);
+        const el = document.createElement('div');
+        el.className = `appointment ${e.type==='booked'?'booked':'busy'}`;
+        el.style.top    = `${top}px`;
+        el.style.height = `${ht}px`;
+        el.innerHTML =
+          `<strong>${e.start} – ${e.end}</strong><br>` +
+          (e.type==='booked'
+            ? `Patient: ${e.patient_name || 'Patient'}<br>Reason: ${e.reason}`
+            : `${e.reason}`) +
+          (e.notes ? `<div class="notes">Notes: ${e.notes}</div>` : '');
+        timeSlots.appendChild(el);
+      });
+
+      dayView.style.display = 'block';
+    }
+  </script>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign Up - MedIQ</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #007BFF, #00BFFF);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px 0;
+        }
+        .signup-container {
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            width: 900px;
+            max-width: 90%;
+            display: flex;
+            margin: 20px 0;
+        }
+        .signup-image {
+            background-image: url('{% static "accounts/images/signup-image.jpg" %}');
+            background-size: cover;
+            background-position: center;
+            width: 40%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .signup-form {
+            width: 60%;
+            padding: 40px;
+        }
+        .signup-form h1 {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .form-control {
+            height: 45px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            padding: 0 15px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            border-color: #007BFF;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        .signup-btn {
+            background: linear-gradient(135deg, #007BFF, #00BFFF);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            height: 50px;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .signup-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.4);
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        .login-link a {
+            color: #007BFF;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .brand-overlay {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .brand-overlay h2 {
+            font-weight: 700;
+            margin: 0;
+            font-size: 28px;
+        }
+        .brand-overlay p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .alert-doctor {
+            background-color: #ffe4e1;
+            color: #c0392b;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        /* new captcha styling */
+        .captcha-box {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 1.2em;
+            letter-spacing: 0.1em;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .signup-image {
+                display: none;
+            }
+            .signup-form {
+                width: 100%;
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="signup-image">
+            <div class="brand-overlay">
+                <h2>MedIQ</h2>
+                <p>Your health, our priority.</p>
+            </div>
+        </div>
+        <div class="signup-form">
+            <h1>Create Your Account</h1>
+            <p class="text-muted mb-3">Join MedIQ to manage your healthcare journey</p>
+            <div class="alert-doctor">
+                <strong>Note:</strong> If you're a doctor, please <a href="{% url 'doctor_login' %}">log in here</a>.
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_username">Username</label>
+                            {{ form.username }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_email">Email</label>
+                            {{ form.email }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_password">Password</label>
+                            {{ form.password }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_confirm_password">Confirm Password</label>
+                            {{ form.confirm_password }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_age">Age</label>
+                            {{ form.age }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_phone">Phone Number</label>
+                            {{ form.phone }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_profile_picture">Profile Picture</label>
+                    {{ form.profile_picture }}
+                </div>
+
+                {# —— new human‑check block —— #}
+                <div class="form-group">
+                    <label for="id_captcha_input">Are you human? Enter the code shown:</label>
+                    <div class="captcha-box">{{ captcha_code }}</div>
+                    <input
+                      type="text"
+                      name="captcha_input"
+                      id="id_captcha_input"
+                      class="form-control"
+                      maxlength="5"
+                      placeholder="Type this code"
+                      required
+                    >
+                    {% if form.errors.captcha_input %}
+                      <small class="text-danger">{{ form.errors.captcha_input.0 }}</small>
+                    {% endif %}
+                </div>
+                {# ————————— end human‑check ————————— #}
+
+                <button type="submit" class="signup-btn">Create Account</button>
+            </form>
+            
+            <div class="login-link">
+                Already have an account? <a href="{% url 'login' %}">Log in here</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

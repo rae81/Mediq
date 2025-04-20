@@ -1,0 +1,159 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Book Appointment - MedIQ</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        {% if request.session.high_contrast %}
+            body {
+                background-color: #000 !important;
+                color: #fff !important;
+                font-family: {% if request.session.alternative_font %}'Oswald',sans-serif{% else %}'Roboto',sans-serif{% endif %} !important;
+                font-size: {{ request.session.font_size|default:"22" }}px !important;
+            }
+            .form-control, select, textarea {
+                background-color: #000 !important;
+                color: #fff !important;
+                border-color: #ffea00 !important;
+            }
+            .btn-primary {
+                background-color: #ffea00 !important;
+                color: #000 !important;
+                border: none !important;
+            }
+            .btn-primary:hover {
+                background-color: #e6d200 !important;
+            }
+        {% elif request.session.dark_mode %}
+            body {
+                background-color: #333 !important;
+                color: #fff !important;
+                font-family: {% if request.session.alternative_font %}'Oswald',sans-serif{% else %}'Roboto',sans-serif{% endif %} !important;
+                font-size: {{ request.session.font_size|default:"20" }}px !important;
+            }
+            .form-control, select, textarea {
+                background-color: #555 !important;
+                color: #fff !important;
+                border-color: #007BFF !important;
+            }
+            .btn-primary {
+                background-color: #007BFF !important;
+                color: #fff !important;
+                border: none !important;
+            }
+            .btn-primary:hover {
+                background-color: #0056b3 !important;
+            }
+        {% else %}
+            body {
+                background-color: #f4f7fc !important;
+                color: #333 !important;
+                font-family: {% if request.session.alternative_font %}"Oswald",sans-serif{% else %}Arial,sans-serif{% endif %} !important;
+                font-size: {{ request.session.font_size|default:"16" }}px !important;
+            }
+            .form-control, select, textarea {
+                background-color: #fff !important;
+                color: #333 !important;
+                border: 1px solid #e0e6ed !important;
+            }
+            .btn-primary {
+                background-color: #007BFF !important;
+                color: #fff !important;
+                border: none !important;
+            }
+            .btn-primary:hover {
+                background-color: #0069d9 !important;
+            }
+        {% endif %}
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+      <h1 class="mb-4">Book an Appointment</h1>
+
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+
+      <form method="post" action="{% url 'book_appointment_direct' %}">
+        {% csrf_token %}
+
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label for="doctor">Select Doctor</label>
+            <select name="doctor" id="doctor" class="form-control" required>
+              <option value="" disabled>-- Select Doctor --</option>
+              {% for d,s in doctors.items %}
+                <option value="{{ d }}" {% if d == selected_doctor %}selected{% endif %}>{{ d }} ({{ s }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group col-md-6">
+            <label for="specialty">Specialty</label>
+            <input type="text" id="specialty" class="form-control" readonly value="{{ selected_specialty }}">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label>Date</label>
+            <input type="date" name="date" class="form-control" min="{{ today }}" value="{{ selected_date|default:'' }}" required>
+          </div>
+          <div class="form-group col-md-6">
+            <label>Time</label>
+            <select name="time" class="form-control" required>
+              <option value="" disabled>-- Select Time --</option>
+              {% for slot in time_slots %}
+                {% if slot in available_slots %}
+                  <option value="{{ slot }}" {% if slot == selected_time %}selected{% endif %}>{{ slot }}</option>
+                {% else %}
+                  <option value="{{ slot }}" disabled>{{ slot }} (Unavailable)</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Reason for Visit (optional)</label>
+          <textarea name="reason" class="form-control" rows="2">{{ reason|default_if_none:"" }}</textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label>Contact</label>
+            <input type="text" name="contact" class="form-control" value="{{ contact|default:user.email }}" required>
+          </div>
+          <div class="form-group col-md-6">
+            <label>Insurance (optional)</label>
+            <input type="text" name="insurance" class="form-control" value="{{ insurance|default_if_none:"" }}">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Book Appointment</button>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary ml-2">Cancel</a>
+      </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const doctorSelect = document.getElementById('doctor');
+        const specialtyInput = document.getElementById('specialty');
+        const specialtyMap = {{ doctors|safe }};
+
+        doctorSelect.addEventListener('change', function() {
+          specialtyInput.value = specialtyMap[this.value] || '';
+        });
+        if (doctorSelect.value) {
+          specialtyInput.value = specialtyMap[doctorSelect.value] || '';
+        }
+      });
+    </script>
+</body>
+</html>

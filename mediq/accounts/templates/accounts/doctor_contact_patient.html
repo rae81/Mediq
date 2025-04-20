@@ -1,0 +1,69 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block content %}
+
+<a href="{% url 'doctor_dashboard' %}" class="btn btn-link mb-3">
+  ← Back to Dashboard
+</a>
+
+<div class="d-flex border rounded" style="height:600px;">
+  <!-- Patient list -->
+  <div class="border-right" style="width:30%; overflow-y:auto;">
+    <ul class="list-unstyled mb-0">
+      {% for p in patients %}
+        <li
+          class="d-flex align-items-center p-2 {% if selected_patient and p.id == selected_patient.id %}bg-info text-white{% endif %}"
+          style="border-bottom:1px solid #e9ecef; cursor:pointer;"
+          onclick="location.href='?patient={{ p.id }}'">
+
+          {# avatar #}
+          <img
+            src="{% if p.profile.profile_picture %}{{ p.profile.profile_picture.url }}{% else %}{% static 'accounts/images/default.jpg' %}{% endif %}"
+            alt="Avatar"
+            class="rounded-circle mr-2"
+            width="40" height="40"
+          />
+
+          {# name #}
+          <span>{{ p.get_full_name|default:p.username }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Chat panel -->
+  <div class="flex-fill d-flex flex-column">
+    <div class="flex-grow-1 p-3" style="overflow-y:auto;">
+      {% if not selected_patient %}
+        <p class="text-center text-muted my-5">Select a patient to begin.</p>
+      {% else %}
+        {% for m in chat_history %}
+          <div class="mb-2 p-2 rounded 
+                      {% if m.sender_doctor_id == doctor.id %}bg-primary text-white float-right{% else %}bg-light float-left{% endif %}"
+               style="clear:both; max-width:75%;">
+            {{ m.content }}
+            <div class="small text-muted">{{ m.timestamp|date:"M j, H:i" }}</div>
+          </div>
+        {% empty %}
+          <p class="text-center text-muted">No messages yet.</p>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    {% if selected_patient %}
+      <form method="post" class="p-3 border-top">
+        {% csrf_token %}
+        <textarea name="content"
+                  class="form-control mb-2"
+                  rows="3"
+                  placeholder="Type your reply…"
+                  required></textarea>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-paper-plane"></i> Send
+        </button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

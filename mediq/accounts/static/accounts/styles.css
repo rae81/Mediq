@@ -1,0 +1,13 @@
+/* styles.css (normal mode) */
+body {
+    background-color: #f4f4f4;
+    font-size: 16px;
+    color: #333;
+    font-family: Arial, sans-serif;
+}
+header {
+    background-color: #007BFF;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}

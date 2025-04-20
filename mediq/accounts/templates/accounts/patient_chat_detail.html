@@ -1,0 +1,21 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+  <h2>Chat with Dr. {{ doctor.name }}</h2>
+  <div class="chat-window">
+    {% for msg in chat_history %}
+      <div class="{{ msg.sender_user|yesno:'from-you,from-them' }}">
+        <strong>
+          {% if msg.sender_user == request.user %}You{% else %}Dr. {{ doctor.name }}{% endif %}
+        </strong>:
+        {{ msg.content }} <em>({{ msg.timestamp|date:"SHORT_DATETIME_FORMAT" }})</em>
+      </div>
+    {% endfor %}
+  </div>
+  <hr>
+  <form method="post">{% csrf_token %}
+    {{ form.receiver_doctor }}  {# hidden or disabled #}
+    {{ form.content }}
+    <button type="submit">Send</button>
+  </form>
+  <p><a href="{% url 'patient_chat_list' %}">← back to doctors</a></p>
+{% endblock %}

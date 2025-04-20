@@ -1,0 +1,368 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upcoming Appointments - MedIQ</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        {% if request.session.high_contrast %}
+            body {
+                background-color: #000;
+                color: #fff;
+                font-family: {% if request.session.alternative_font %}'Oswald', sans-serif{% else %}'Roboto', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"22" }}px;
+            }
+            .card {
+                background-color: #000;
+                border: 2px solid #ffea00;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 0 10px rgba(255,234,0,0.5);
+            }
+            .card-header {
+                background-color: #ffea00;
+                color: #000;
+                font-weight: bold;
+                padding: 15px;
+            }
+            .btn-primary {
+                background-color: #ffea00;
+                color: #000;
+                border: none;
+            }
+            .btn-primary:hover {
+                background-color: #e6d200;
+                color: #000;
+            }
+            .badge-primary {
+                background-color: #ffea00;
+                color: #000;
+            }
+            .badge-success {
+                background-color: #00ff00;
+                color: #000;
+            }
+            .badge-warning {
+                background-color: #ffcc00;
+                color: #000;
+            }
+            .badge-danger {
+                background-color: #ff3333;
+                color: #000;
+            }
+            .form-check-label {
+                color: #fff;
+            }
+            .reminder-card {
+                background-color: #222;
+                border: 1px solid #ffea00;
+            }
+            hr {
+                border-color: #ffea00;
+            }
+        {% elif request.session.dark_mode %}
+            body {
+                background-color: #333;
+                color: #fff;
+                font-family: {% if request.session.alternative_font %}'Oswald', sans-serif{% else %}'Roboto', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"20" }}px;
+            }
+            .card {
+                background-color: #444;
+                border: 2px solid #007BFF;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            }
+            .card-header {
+                background-color: #007BFF;
+                color: #fff;
+                font-weight: bold;
+                padding: 15px;
+            }
+            .form-check-label {
+                color: #fff;
+            }
+            .reminder-card {
+                background-color: #555;
+                border: 1px solid #007BFF;
+            }
+            hr {
+                border-color: #007BFF;
+            }
+        {% else %}
+            body {
+                background-color: #f4f4f4;
+                color: #333;
+                font-family: {% if request.session.alternative_font %}"Oswald", sans-serif{% else %}Arial, sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"16" }}px;
+            }
+            .card {
+                background-color: #fff;
+                border: 2px solid #007BFF;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+            .card-header {
+                background-color: #007BFF;
+                color: white;
+                font-weight: bold;
+                padding: 15px;
+            }
+            .reminder-card {
+                background-color: #f9f9f9;
+                border: 1px solid #dee2e6;
+            }
+        {% endif %}
+        
+        .appointment-card {
+            transition: transform 0.3s;
+            margin-bottom: 15px;
+        }
+        .appointment-card:hover {
+            transform: translateY(-5px);
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .upcoming-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .doctor-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .doctor-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .appointment-details {
+            margin-top: 15px;
+        }
+        .appointment-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .reminder-status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .reminder-preferences {
+            margin-top: 20px;
+        }
+        .dashboard-nav {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <!-- Dashboard Navigation -->
+        <div class="dashboard-nav d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-bell mr-2"></i> Upcoming Appointments</h1>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+            </a>
+        </div>
+        
+        <div class="row">
+            <!-- Left Column: Upcoming Appointments -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0"><i class="fas fa-calendar-alt mr-2"></i> Your Upcoming Appointments</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if appointments %}
+                            <div class="list-group">
+                                {% for appointment in appointments %}
+                                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-3">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">
+                                                <i class="fas fa-calendar-check mr-2"></i> 
+                                                {{ appointment.date }} at {{ appointment.time|time:"g:i A" }} 
+                                                {% if appointment.is_today %}<span class="badge badge-info ml-2">Today</span>{% endif %}
+                                            </h5>
+                                            <small class="text-muted">Booked: {{ appointment.created_at|date:"N j, Y" }}</small>
+                                        </div>
+                                        <p class="mb-1">
+                                            <strong>Doctor:</strong> {{ appointment.doctor }} ({{ appointment.specialty }})
+                                        </p>
+                                        {% if appointment.reason %}
+                                            <p class="mb-1"><strong>Reason:</strong> {{ appointment.reason }}</p>
+                                        {% endif %}
+
+                                        {# Display Check-in Status & Link to Details/Timer Page #}
+                                        <div class="appointment-actions mt-2 d-flex justify-content-between align-items-center">
+                                             <div> {# Status indicator #}
+                                                 {% if appointment.has_checked_in %}
+                                                    <span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i> Checked In</span>
+                                                 {% else %}
+                                                     {# Maybe add logic here if needed based on time #}
+                                                 {% endif %}
+                                             </div>
+                                             <div> {# Action Buttons #}
+                                                {# Link to the NEW check-in status/timer page (now named virtual_check_in) #}
+                                                <a href="{% url 'virtual_check_in' appointment.id %}" class="btn btn-sm btn-outline-info mr-2" title="View Check-In Status / Perform Check-In">
+                                                     <i class="fas fa-user-clock"></i> Check-In Status / Timer
+                                                 </a>
+                                                 <a href="{% url 'edit_appointment' appointment.id %}" class="btn btn-sm btn-outline-secondary mr-2" title="Edit Appointment">
+                                                     <i class="fas fa-edit"></i> Edit
+                                                 </a>
+                                                 <button class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#cancelModal{{ appointment.id }}" title="Cancel Appointment">
+                                                     <i class="fas fa-times-circle"></i> Cancel
+                                                 </button>
+                                             </div>
+                                        </div>
+                                    </div>
+
+                                     <!-- Cancel Confirmation Modal -->
+                                     <div class="modal fade" id="cancelModal{{ appointment.id }}" tabindex="-1" role="dialog" aria-labelledby="cancelModalLabel{{ appointment.id }}" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="cancelModalLabel{{ appointment.id }}">Confirm Cancellation</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to cancel your appointment?
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Keep Appointment</button>
+                                                    <form action="{% url 'cancel_appointment' appointment.id %}" method="post" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger">Yes, Cancel</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>                    
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle mr-2"></i> You don't have any upcoming appointments scheduled.
+                                <a href="{% url 'smart_scheduler' %}" class="alert-link">Schedule one now</a>.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Reminder Preferences -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="h4 mb-0"><i class="fas fa-cog mr-2"></i> Reminder Preferences</h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'save_reminder_preferences' %}">
+                            {% csrf_token %}
+                            
+                            <!-- Notification Methods -->
+                            <h3 class="h5 mb-3">Notification Methods</h3>
+                            
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="email_reminders" id="email_reminders" 
+                                       {% if preference.email_reminders %}checked{% endif %}>
+                                <label class="form-check-label" for="email_reminders">
+                                    <i class="fas fa-envelope mr-2"></i> Email Reminders
+                                </label>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="sms_reminders" id="sms_reminders"
+                                       {% if preference.sms_reminders %}checked{% endif %}>
+                                <label class="form-check-label" for="sms_reminders">
+                                    <i class="fas fa-sms mr-2"></i> SMS Reminders
+                                </label>
+                                {% if not user.profile.phone %}
+                                    <div class="text-warning small mt-1">
+                                        <i class="fas fa-exclamation-circle"></i> 
+                                        Add a phone number in your profile to enable SMS reminders.
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <hr>
+                            
+                            <!-- Timing Preferences -->
+                            <h3 class="h5 mb-3">Timing Preferences</h3>
+                            
+                            <div class="form-group">
+                                <label for="days_before"><i class="fas fa-calendar-day mr-2"></i> Send reminders</label>
+                                <select class="form-control" id="days_before" name="days_before">
+                                    <option value="1" {% if preference.days_before == 1 %}selected{% endif %}>1 day before</option>
+                                    <option value="2" {% if preference.days_before == 2 %}selected{% endif %}>2 days before</option>
+                                    <option value="3" {% if preference.days_before == 3 %}selected{% endif %}>3 days before</option>
+                                    <option value="7" {% if preference.days_before == 7 %}selected{% endif %}>1 week before</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="hours_before"><i class="fas fa-clock mr-2"></i> Additional reminder</label>
+                                <select class="form-control" id="hours_before" name="hours_before">
+                                    <option value="2" {% if preference.hours_before == 2 %}selected{% endif %}>2 hours before</option>
+                                    <option value="6" {% if preference.hours_before == 6 %}selected{% endif %}>6 hours before</option>
+                                    <option value="12" {% if preference.hours_before == 12 %}selected{% endif %}>12 hours before</option>
+                                    <option value="24" {% if preference.hours_before == 24 %}selected{% endif %}>24 hours before</option>
+                                    <option value="0" {% if preference.hours_before == 0 %}selected{% endif %}>No additional reminder</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-block mt-4">
+                                <i class="fas fa-save mr-2"></i> Save Preferences
+                            </button>
+                        </form>
+                        
+                        <!-- Manual Reminder Trigger (admin only) -->
+                        {% if user.is_staff %}
+                            <hr>
+                            <form method="post" action="{% url 'trigger_reminder' %}" class="mt-3">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-primary btn-block">
+                                    <i class="fas fa-sync-alt mr-2"></i> Trigger Reminders Manually
+                                </button>
+                                <div class="small text-muted mt-2">
+                                    <i class="fas fa-info-circle mr-1"></i> This will trigger the reminder process for all eligible appointments.
+                                </div>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if message %}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle mr-2"></i> {{ message }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

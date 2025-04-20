@@ -1,0 +1,36 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+  <h2>Chat with {{ patient.get_full_name|default:patient.username }}</h2>
+
+  <div class="chat-window" style="max-height:60vh; overflow-y:auto; padding:1rem; border:1px solid #ccc;">
+    {% for msg in chat_history %}
+      <div style="margin-bottom:.5rem;">
+        <strong>
+          {% if msg.sender_doctor %}
+            You
+          {% else %}
+            {{ patient.get_full_name|default:patient.username }}
+          {% endif %}
+        </strong>:
+        {{ msg.content }}
+        <em style="font-size:.8em; color:#666;">({{ msg.timestamp|date:"SHORT_DATETIME_FORMAT" }})</em>
+      </div>
+    {% endfor %}
+  </div>
+
+  <hr>
+
+  <form method="post">{% csrf_token %}
+    {{ form.receiver_user }} {# Hidden field with the current patient #}
+    <div>
+      {{ form.content.label_tag }}
+      {{ form.content }}
+      {% if form.content.errors %}
+        <div class="error">{{ form.content.errors }}</div>
+      {% endif %}
+    </div>
+    <button type="submit">Send</button>
+  </form>
+
+  <p><a href="{% url 'doctor_chat_list' %}">← back to patients</a></p>
+{% endblock %}
