@@ -41,7 +41,6 @@ the project up even without Internet connectivity.
 * Responsive appointment calendar (FullCalendar v5)
 * Doctor availability management & conflict detection
 * Real‑time chat (user ↔ doctor or doctor ↔ doctor)
-* E‑mail, Web‑Push (VAPID) and optional Twilio SMS reminders
 * Profile pictures & file uploads stored in `/media`
 * Background schedulers (APScheduler) for reminder dispatch
 * GDPR‑friendly «Remember Me» & session hardening
@@ -103,13 +102,12 @@ pip install -r requirements.txt
 
 # 3. Apply migrations & create an admin account
 python manage.py migrate
-python manage.py createsuperuser
+
 
 # 4. Launch the development server
 python manage.py runserver
 ```
-Navigate to **http://127.0.0.1:8000/** and log in with the
-superuser credentials you just created.
+Navigate to **http://127.0.0.1:8000/** 
 
 ----------------------------------------------------------------
 6.  Full Installation Guide
