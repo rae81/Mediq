@@ -1,0 +1,605 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MedIQ Dashboard</title>
+    <!-- Bootstrap CSS and Font Awesome -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Inline CSS with conditional styling -->
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --secondary: #3f37c9;
+            --danger: #ef476f;
+            --success: #06d6a0;
+            --warning: #ffd166;
+            --info: #118ab2;
+            --card-border-radius: 16px;
+            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        {% if request.session.high_contrast %}
+            body {
+                background-color: #000;
+                color: #fff;
+                font-family: {% if request.session.alternative_font %}'Poppins', sans-serif{% else %}'Inter', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"22" }}px;
+            }
+            .welcome-header { 
+                background-color: #ffea00;
+                color: #000;
+                border-radius: var(--card-border-radius);
+                margin-bottom: 30px;
+                position: relative;
+            }
+            .dashboard-item {
+                background-color: #111;
+                border: 2px solid #ffea00;
+                border-radius: var(--card-border-radius);
+                box-shadow: var(--card-shadow);
+                transition: var(--transition);
+                margin-bottom: 20px;
+                color: #fff;
+                position: relative;
+                overflow: hidden;
+            }
+            .dashboard-item:hover {
+                transform: translateY(-6px);
+                border-color: #fff;
+                box-shadow: 0 15px 30px -5px rgba(255, 234, 0, 0.3);
+            }
+            .dashboard-title {
+                font-weight: 600;
+                color: #fff;
+            }
+            .dashboard-desc {
+                color: #aaa;
+            }
+            .dashboard-icon {
+                color: #ffea00;
+            }
+            .notification-badge {
+                background-color: #ff3333;
+                color: #fff;
+            }
+            .section-title {
+                border-bottom: 2px solid #ffea00;
+                color: #fff;
+            }
+            .upcoming-appointment {
+                background-color: #222;
+                border-radius: var(--card-border-radius);
+                border: 1px solid #ffea00;
+            }
+            .btn-danger {
+                background-color: var(--danger);
+                border: none;
+            }
+            .btn-outline-primary {
+                color: #ffea00;
+                border-color: #ffea00;
+            }
+            .btn-outline-primary:hover {
+                background-color: #ffea00;
+                color: #000;
+            }
+            .footer {
+                background-color: #111;
+                color: #fff;
+            }
+        {% elif request.session.dark_mode %}
+            body {
+                background-color: #121212;
+                color: #fff;
+                font-family: {% if request.session.alternative_font %}'Poppins', sans-serif{% else %}'Inter', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"20" }}px;
+            }
+            .welcome-header {
+                background: linear-gradient(to right, var(--primary), var(--primary-light));
+                color: #fff;
+                border-radius: var(--card-border-radius);
+                margin-bottom: 30px;
+                position: relative;
+            }
+            .dashboard-item {
+                background-color: #1e1e1e;
+                border: 1px solid #333;
+                border-radius: var(--card-border-radius);
+                box-shadow: var(--card-shadow);
+                transition: var(--transition);
+                margin-bottom: 20px;
+                color: #fff;
+                position: relative;
+                overflow: hidden;
+            }
+            .dashboard-item:hover {
+                transform: translateY(-6px);
+                border-color: var(--primary);
+                box-shadow: 0 15px 30px -5px rgba(67, 97, 238, 0.2);
+            }
+            .dashboard-title {
+                font-weight: 600;
+                color: #fff;
+            }
+            .dashboard-desc {
+                color: #aaa;
+            }
+            .dashboard-icon {
+                color: var(--primary);
+            }
+            .notification-badge {
+                background-color: var(--danger);
+                color: #fff;
+            }
+            .section-title {
+                border-bottom: 2px solid var(--primary);
+                color: #fff;
+            }
+            .upcoming-appointment {
+                background-color: #1e1e1e;
+                border-radius: var(--card-border-radius);
+                border: 1px solid #333;
+            }
+            .btn-danger {
+                background-color: var(--danger);
+                border: none;
+            }
+            .btn-outline-primary {
+                color: var(--primary);
+                border-color: var(--primary);
+            }
+            .btn-outline-primary:hover {
+                background-color: var(--primary);
+                color: #fff;
+            }
+            .footer {
+                background-color: #1e1e1e;
+                color: #aaa;
+            }
+        {% else %}
+            body {
+                background-color: #f8f9fa;
+                color: #333;
+                font-family: {% if request.session.alternative_font %}"Poppins", sans-serif{% else %}'Inter', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"16" }}px;
+            }
+            .welcome-header {
+                background: linear-gradient(to right, var(--primary), var(--primary-light));
+                color: white;
+                border-radius: var(--card-border-radius);
+                margin-bottom: 30px;
+                position: relative;
+            }
+            .dashboard-item {
+                background-color: #fff;
+                border: 1px solid #e7eaf0;
+                border-radius: var(--card-border-radius);
+                box-shadow: var(--card-shadow);
+                transition: var(--transition);
+                margin-bottom: 20px;
+                color: #333;
+                position: relative;
+                overflow: hidden;
+            }
+            .dashboard-item:hover {
+                transform: translateY(-6px);
+                border-color: var(--primary-light);
+                box-shadow: 0 15px 30px -5px rgba(67, 97, 238, 0.2);
+            }
+            .dashboard-title {
+                font-weight: 600;
+                color: #333;
+            }
+            .dashboard-desc {
+                color: #555;
+            }
+            .dashboard-icon {
+                color: var(--primary);
+            }
+            .notification-badge {
+                background-color: var(--danger);
+                color: #fff;
+            }
+            .section-title {
+                border-bottom: 2px solid var(--primary-light);
+                color: #333;
+            }
+            .upcoming-appointment {
+                background-color: #fff;
+                border-radius: var(--card-border-radius);
+                border: 1px solid #e7eaf0;
+            }
+            .btn-danger {
+                background-color: var(--danger);
+                border: none;
+            }
+            .btn-outline-primary {
+                color: var(--primary);
+                border-color: var(--primary);
+            }
+            .btn-outline-primary:hover {
+                background-color: var(--primary);
+                color: #fff;
+            }
+            .footer {
+                background-color: #fff;
+                color: #777;
+            }
+        {% endif %}
+        
+        /* Common Styles */
+        body {
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content-wrapper {
+            flex: 1;
+        }
+        
+        .welcome-header {
+            padding: 40px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .welcome-content {
+            display: flex;
+            align-items: center;
+        }
+        
+        .profile-pic {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            margin-right: 20px;
+        }
+        
+        .dashboard-item {
+            padding: 25px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .dashboard-icon-wrapper {
+            height: 60px;
+            width: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+        
+        .dashboard-icon {
+            font-size: 24px;
+        }
+        
+        .dashboard-title {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        .dashboard-desc {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            text-align: center;
+            line-height: 24px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .section-title {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            font-weight: 600;
+            font-size: 20px;
+        }
+        
+        .upcoming-appointment {
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .feature-section {
+            margin-bottom: 40px;
+        }
+        
+        .row-equal {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .row-equal > [class*='col-'] {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .btn {
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .logout-btn {
+            padding: 8px 20px;
+            font-weight: 500;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .featured-item {
+            border-width: 2px;
+            border-color: var(--primary);
+            position: relative;
+        }
+        
+        .featured-item::before {
+            content: 'Featured';
+            position: absolute;
+            top: 10px;
+            left: 0;
+            background: var(--primary);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 0 4px 4px 0;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .footer {
+            padding: 25px 0;
+            margin-top: 30px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        a {
+            text-decoration: none !important;
+        }
+        
+        /* Modern Layout Adjustments */
+        .container {
+            max-width: 1200px;
+            padding: 0 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-wrapper">
+        <div class="container mt-4">
+            <!-- Header with welcome message, profile picture, and logout button -->
+            <div class="welcome-header mb-4">
+                <div class="welcome-content">
+                    {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture" class="profile-pic">
+                    {% else %}
+                        <img src="{% static 'accounts/default_profile.png' %}" alt="Default Profile Picture" class="profile-pic">
+                    {% endif %}
+                    <div>
+                        <h1 class="h3 mb-1">Welcome, {{ user.username }}!</h1>
+                        <p class="mb-0">Manage your health journey with MedIQ</p>
+                    </div>
+                </div>
+                <a href="{% url 'logout' %}" class="btn btn-danger logout-btn">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Log Out
+                </a>
+            </div>
+            
+            <!-- Upcoming Appointment Summary (if any) -->
+            {% if upcoming_appointment %}
+                <div class="upcoming-appointment">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h5 mb-0">
+                            <i class="fas fa-calendar-day mr-2"></i> Your Next Appointment
+                        </h2>
+                        <span class="badge badge-info p-2">{{ upcoming_appointment.date }} at {{ upcoming_appointment.time }}</span>
+                    </div>
+                    <p class="mt-2 mb-0">
+                        <strong>Doctor:</strong> {{ upcoming_appointment.doctor }} ({{ upcoming_appointment.specialty }})
+                    </p>
+                    <div class="text-right mt-3">
+                        <a href="{% url 'appointment_reminder' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye mr-1"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Integrated Medical Appointment System (Featured) -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <a href="{% url 'smart_scheduler' %}">
+                        <div class="dashboard-item featured-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-2 text-center">
+                                    <div class="dashboard-icon-wrapper mx-auto" style="background-color: rgba(67, 97, 238, 0.15); width: 80px; height: 80px;">
+                                        <i class="fas fa-laptop-medical dashboard-icon" style="font-size: 36px;"></i>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <div class="dashboard-title" style="font-size: 22px;">AI Scheduler & Calendar</div>
+                                    <div class="dashboard-desc">Our intelligent assistant helps you find the perfect appointment time and view doctor availability in real-time.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Health Management Features -->
+            <div class="feature-section">
+                <h2 class="section-title"><i class="fas fa-heartbeat mr-2"></i> Health Management</h2>
+                <div class="row row-equal">
+                    <!-- Virtual Check-In -->
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <a href="{% url 'virtual_check_in_list' %}">
+                            <div class="dashboard-item h-100">
+                                <div class="dashboard-icon-wrapper">
+                                    <i class="fas fa-user-check dashboard-icon"></i>
+                                </div>
+                                <div class="dashboard-title">Virtual Check-In</div>
+                                <div class="dashboard-desc">Check in for your appointments online and avoid waiting room delays.</div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <!-- Book Appointment (Direct Booking link) -->
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <a href="{% url 'book_appointment_direct' %}">
+                            <div class="dashboard-item h-100">
+                                <div class="dashboard-icon-wrapper">
+                                    <i class="fas fa-calendar-plus dashboard-icon"></i>
+                                </div>
+                                <div class="dashboard-title">Book Appointment</div>
+                                <div class="dashboard-desc">Schedule your next visit quickly with our integrated booking system.</div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <!-- Contact Doctor (Messaging Feature) -->
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <a href="{% url 'contact_doctor' %}">
+                            <div class="dashboard-item h-100">
+                                <div class="dashboard-icon-wrapper">
+                                    <i class="fas fa-comments dashboard-icon"></i>
+                                </div>
+                                <div class="dashboard-title">Message Doctor</div>
+                                <div class="dashboard-desc">Contact your healthcare provider directly with any questions or concerns.</div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <!-- Appointment Reminder -->
+                    <div class="col-md-6 col-lg-6 mb-4">
+                        <a href="{% url 'appointment_reminder' %}">
+                            <div class="dashboard-item h-100">
+                                {% if pending_reminders %}
+                                    <div class="notification-badge">{{ pending_reminders }}</div>
+                                {% endif %}
+                                <div class="dashboard-icon-wrapper">
+                                    <i class="fas fa-bell dashboard-icon"></i>
+                                </div>
+                                <div class="dashboard-title">Appointment Reminders</div>
+                                <div class="dashboard-desc">Set up personalized reminders so you never miss an important appointment again.</div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <!-- Medical Calendar -->
+                    <div class="col-md-6 col-lg-6 mb-4">
+                        <a href="{% url 'calendar' %}">
+                            <div class="dashboard-item h-100">
+                                <div class="dashboard-icon-wrapper">
+                                    <i class="fas fa-calendar-alt dashboard-icon"></i>
+                                </div>
+                                <div class="dashboard-title">My Calendar</div>
+                                <div class="dashboard-desc">View your complete health schedule in one place with our integrated calendar system.</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Financial Management Features -->
+            <div class="feature-section">
+                <h2 class="section-title"><i class="fas fa-file-invoice-dollar mr-2"></i> Financial Management</h2>
+                <div class="row">
+                    <div class="col-md-12">
+                        <a href="{% url 'billing_insurance' %}">
+                            <div class="dashboard-item">
+                                {% if unpaid_bills %}
+                                    <div class="notification-badge">{{ unpaid_bills }}</div>
+                                {% endif %}
+                                <div class="dashboard-icon-wrapper">
+                                    <i class="fas fa-file-invoice-dollar dashboard-icon"></i>
+                                </div>
+                                <div class="dashboard-title">Billing & Insurance</div>
+                                <div class="dashboard-desc">Manage your bills, insurance information, and verify coverage directly through our secure portal.</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings & Preferences -->
+            <div class="feature-section">
+                <h2 class="section-title">
+                    <i class="fas fa-cog mr-2"></i> Settings & Preferences
+                </h2>
+                <div class="row row-equal">
+                    <!-- Accessibility Settings -->
+                    <div class="col-md-6 mb-4">
+                        <a href="{% url 'accessibility_settings' %}">
+                            <div class="dashboard-item h-100">
+                                <div class="dashboard-icon-wrapper">
+                                    <i class="fas fa-universal-access dashboard-icon"></i>
+                                </div>
+                                <div class="dashboard-title">Accessibility Settings</div>
+                                <div class="dashboard-desc">Customize your experience with settings for font size, contrast, and other display options.</div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <!-- User Profile -->
+                    <div class="col-md-6 mb-4">
+                        <a href="{% url 'profile' %}">
+                            <div class="dashboard-item h-100">
+                                <div class="dashboard-icon-wrapper">
+                                    <i class="fas fa-user-cog dashboard-icon"></i>
+                                </div>
+                                <div class="dashboard-title">Profile Settings</div>
+                                <div class="dashboard-desc">Update your personal information, contact details, and communication preferences.</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer py-4">
+        <div class="container text-center">
+            <p class="mb-1">© 2025 MedIQ Healthcare. All rights reserved.</p>
+            <small class="text-muted">Version 2.1.0</small>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

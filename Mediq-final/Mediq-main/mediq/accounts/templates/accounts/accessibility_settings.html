@@ -1,0 +1,302 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Accessibility Settings - MedIQ</title>
+    <!-- Bootstrap CSS and Font Awesome -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        {% if request.session.high_contrast %}
+            body {
+                background-color: #000;
+                color: #fff;
+                font-family: {% if request.session.alternative_font %}'Oswald', sans-serif{% else %}'Roboto', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"22" }}px;
+            }
+            .card {
+                background-color: #000;
+                border: 2px solid #ffea00;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 0 10px rgba(255,234,0,0.5);
+            }
+            .card-header {
+                background-color: #ffea00;
+                color: #000;
+                font-weight: bold;
+                padding: 15px;
+            }
+            .btn-primary {
+                background-color: #ffea00;
+                color: #000;
+                border: none;
+            }
+            .btn-primary:hover {
+                background-color: #e6d200;
+                color: #000;
+            }
+            .form-check-input:checked {
+                background-color: #ffea00;
+                border-color: #ffea00;
+            }
+            .custom-range::-webkit-slider-thumb {
+                background: #ffea00;
+            }
+            .custom-range::-moz-range-thumb {
+                background: #ffea00;
+            }
+            .custom-range::-ms-thumb {
+                background: #ffea00;
+            }
+        {% elif request.session.dark_mode %}
+            body {
+                background-color: #333;
+                color: #fff;
+                font-family: {% if request.session.alternative_font %}'Oswald', sans-serif{% else %}'Roboto', sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"20" }}px;
+            }
+            .card {
+                background-color: #444;
+                border: 2px solid #007BFF;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            }
+            .card-header {
+                background-color: #007BFF;
+                color: #fff;
+                font-weight: bold;
+                padding: 15px;
+            }
+            .btn-primary {
+                background-color: #007BFF;
+                color: #fff;
+                border: none;
+            }
+            .btn-primary:hover {
+                background-color: #0056b3;
+                color: #fff;
+            }
+            .form-check-input:checked {
+                background-color: #007BFF;
+                border-color: #007BFF;
+            }
+            .custom-range::-webkit-slider-thumb {
+                background: #007BFF;
+            }
+            .custom-range::-moz-range-thumb {
+                background: #007BFF;
+            }
+            .custom-range::-ms-thumb {
+                background: #007BFF;
+            }
+        {% else %}
+            body {
+                background-color: #f4f7fc;
+                color: #333;
+                font-family: {% if request.session.alternative_font %}"Oswald", sans-serif{% else %}Arial, sans-serif{% endif %};
+                font-size: {{ request.session.font_size|default:"16" }}px;
+            }
+            .card {
+                background-color: #fff;
+                border: none;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                margin-bottom: 20px;
+            }
+            .card-header {
+                background-color: #007BFF;
+                color: white;
+                font-weight: bold;
+                padding: 15px;
+            }
+            .btn-primary {
+                background-color: #007BFF;
+                color: #fff;
+                border: none;
+            }
+            .btn-primary:hover {
+                background-color: #0056b3;
+                color: #fff;
+            }
+            .form-check-input:checked {
+                background-color: #007BFF;
+                border-color: #007BFF;
+            }
+            .custom-range::-webkit-slider-thumb {
+                background: #007BFF;
+            }
+            .custom-range::-moz-range-thumb {
+                background: #007BFF;
+            }
+            .custom-range::-ms-thumb {
+                background: #007BFF;
+            }
+        {% endif %}
+        
+        .dashboard-nav {
+            margin-bottom: 30px;
+        }
+        
+        .toggle-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .toggle-list li {
+            padding: 15px 0;
+            border-bottom: 1px solid {% if request.session.high_contrast %}#444{% elif request.session.dark_mode %}#555{% else %}#eee{% endif %};
+        }
+        
+        .toggle-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .toggle-label {
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+        
+        .toggle-description {
+            font-size: 0.9rem;
+            color: {% if request.session.high_contrast %}#ccc{% elif request.session.dark_mode %}#ccc{% else %}#777{% endif %};
+            margin-top: 5px;
+        }
+        
+        .preview-box {
+            border: 1px solid {% if request.session.high_contrast %}#ffea00{% elif request.session.dark_mode %}#007BFF{% else %}#ddd{% endif %};
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .form-check-input {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .range-container {
+            padding: 10px 0;
+        }
+        
+        .font-size-indicator {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <!-- Dashboard Navigation -->
+        <div class="dashboard-nav d-flex justify-content-between align-items-center">
+            <h1><i class="fas fa-universal-access mr-2"></i> Accessibility Settings</h1>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+            </a>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="h4 mb-0"><i class="fas fa-cog mr-2"></i> Customize Your Experience</h2>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <ul class="toggle-list">
+                        <li class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="toggle-label">Dark Mode</div>
+                                <div class="toggle-description">Switch to a dark theme for reduced eye strain in low light conditions.</div>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="dark_mode" id="dark_mode" {% if request.session.dark_mode %}checked{% endif %} {% if request.session.high_contrast %}disabled{% endif %}>
+                            </div>
+                        </li>
+                        
+                        <li class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="toggle-label">High Contrast</div>
+                                <div class="toggle-description">Increase the contrast between text and background colors for better readability.</div>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="high_contrast" id="high_contrast" {% if request.session.high_contrast %}checked{% endif %}>
+                            </div>
+                        </li>
+                        
+                        <li class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="toggle-label">Alternative Font</div>
+                                <div class="toggle-description">Use an alternative font that may be easier to read for some users.</div>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="alternative_font" id="alternative_font" {% if request.session.alternative_font %}checked{% endif %}>
+                            </div>
+                        </li>
+                        
+                        <li>
+                            <div class="toggle-label mb-3">Font Size</div>
+                            <div class="range-container">
+                                <div class="font-size-indicator">Current size: <span id="fontSizeValue">{{ request.session.font_size|default:"16" }}</span>px</div>
+                                <input type="range" class="custom-range" min="14" max="28" step="2" name="font_size" id="font_size" value="{{ request.session.font_size|default:'16' }}">
+                                <div class="d-flex justify-content-between">
+                                    <span>Small</span>
+                                    <span>Medium</span>
+                                    <span>Large</span>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    
+                    <div class="preview-box">
+                        <p>This is a preview of how text will look with your selected settings.</p>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg btn-block">
+                            <i class="fas fa-save mr-2"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript for live preview -->
+    <script>
+        const fontSizeSlider = document.getElementById('font_size');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        const previewBox = document.querySelector('.preview-box');
+        
+        fontSizeSlider.addEventListener('input', function() {
+            fontSizeValue.textContent = this.value;
+            previewBox.style.fontSize = this.value + 'px';
+        });
+        
+        // Initialize preview
+        previewBox.style.fontSize = fontSizeSlider.value + 'px';
+        
+        // Toggle for High Contrast and Dark Mode mutual exclusivity
+        const darkModeToggle = document.getElementById('dark_mode');
+        const highContrastToggle = document.getElementById('high_contrast');
+        
+        highContrastToggle.addEventListener('change', function() {
+            if (this.checked) {
+                darkModeToggle.checked = false;
+                darkModeToggle.disabled = true;
+            } else {
+                darkModeToggle.disabled = false;
+            }
+        });
+    </script>
+    
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

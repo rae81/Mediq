@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Appointment - MedIQ</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        {% if request.session.high_contrast %}
+            body {
+                background-color: #000 !important;
+                color: #fff !important;
+                font-family: {% if request.session.alternative_font %}'Oswald',sans-serif{% else %}'Roboto',sans-serif{% endif %} !important;
+                font-size: {{ request.session.font_size|default:"22" }}px !important;
+            }
+            .form-control, select, textarea {
+                background-color: #000 !important;
+                color: #fff !important;
+                border-color: #ffea00 !important;
+            }
+            .btn-primary {
+                background-color: #ffea00 !important;
+                color: #000 !important;
+                border: none !important;
+            }
+            .btn-primary:hover { background-color: #e6d200 !important; }
+        {% elif request.session.dark_mode %}
+            body {
+                background-color: #333 !important;
+                color: #fff !important;
+                font-family: {% if request.session.alternative_font %}'Oswald',sans-serif{% else %}'Roboto',sans-serif{% endif %} !important;
+                font-size: {{ request.session.font_size|default:"20" }}px !important;
+            }
+            .form-control, select, textarea {
+                background-color: #555 !important;
+                color: #fff !important;
+                border-color: #007BFF !important;
+            }
+            .btn-primary {
+                background-color: #007BFF !important;
+                color: #fff !important;
+                border: none !important;
+            }
+            .btn-primary:hover { background-color: #0056b3 !important; }
+        {% else %}
+            body {
+                background-color: #f4f4f4 !important;
+                color: #333 !important;
+                font-family: {% if request.session.alternative_font %}"Oswald",sans-serif{% else %}Arial,sans-serif{% endif %} !important;
+                font-size: {{ request.session.font_size|default:"16" }}px !important;
+            }
+            .form-control, select, textarea {
+                background-color: #fff !important;
+                color: #333 !important;
+                border: 1px solid #ddd !important;
+            }
+            .btn-primary {
+                background-color: #007BFF !important;
+                color: #fff !important;
+                border: none !important;
+            }
+            .btn-primary:hover { background-color: #0069d9 !important; }
+        {% endif %}
+    </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <div class="d-flex justify-content-between mb-4">
+      <h1><i class="fas fa-edit"></i> Edit Appointment</h1>
+      <a href="{% url 'appointment_reminder' %}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2 class="h4">Appointment Details</h2></div>
+      <div class="card-body">
+        <form method="post" action="{% url 'edit_appointment' appointment.id %}">
+          {% csrf_token %}
+          <!-- doctor & specialty -->
+          <div class="row">
+            <div class="col-md-6">
+              <label for="doctor">Doctor</label>
+              <select class="form-control" id="doctor" name="doctor" required>
+                {% for doc in doctors %}
+                  <option value="{{ doc }}" {% if doc == appointment.doctor %}selected{% endif %}>{{ doc }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="specialty">Specialty</label>
+              <select class="form-control" id="specialty" name="specialty" required>
+                {% for spec in specialties %}
+                  <option value="{{ spec }}" {% if spec == appointment.specialty %}selected{% endif %}>{{ spec }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- date & time -->
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <label for="date">Date</label>
+              <input type="date" class="form-control" id="date" name="date" value="{{ appointment.date|date:'Y-m-d' }}" required>
+            </div>
+            <div class="col-md-6">
+              <label for="time">Time</label>
+              <select class="form-control" id="time" name="time" required>
+                <option value="" disabled>-- Select Time --</option>
+                {% for slot in time_slots %}
+                  {% if slot in available_slots or slot == appointment.time|time:"H:i" %}
+                    <option value="{{ slot }}" {% if slot == appointment.time|time:"H:i" %}selected{% endif %}>
+                      {% with h=slot|slice:":2" m=slot|slice:"3:5" %}
+                        {% if h > "12" %}{{ h|add:"-12" }}{% else %}{{ h }}{% endif %}:{{ m }}
+                        {% if h >= "12" %}PM{% else %}AM{% endif %}
+                      {% endwith %}
+                    </option>
+                  {% else %}
+                    <option value="{{ slot }}" disabled>{{ slot }} (Unavailable)</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <!-- reason, contact, insurance, etc. -->
+          <div class="form-group mt-3">
+            <label for="reason">Reason for Visit</label>
+            <textarea class="form-control" id="reason" name="reason" rows="3">{{ appointment.reason }}</textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <label for="contact">Contact Information</label>
+              <input type="text" class="form-control" id="contact" name="contact" value="{{ appointment.contact }}" required>
+            </div>
+            <div class="col-md-6">
+              <label for="insurance">Insurance</label>
+              <input type="text" class="form-control" id="insurance" name="insurance" value="{{ appointment.insurance }}">
+            </div>
+          </div>
+
+          <div class="alert alert-info mt-4">
+            Updating this appointment will reset any sent reminders.
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <a href="{% url 'appointment_reminder' %}" class="btn btn-secondary">
+              <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    $('#doctor').change(function(){
+      const map = {
+        "Dr. Salim": "Cardiology",
+        "Dr. Haddad": "Dermatology",
+        "Dr. Nassar": "Pediatrics",
+        "Dr. Farah": "Neurology",
+        "Dr. Kassem": "Orthopedics"
+      };
+      $('#specialty').val(map[$(this).val()]);
+    });
+  </script>
+</body>
+</html>

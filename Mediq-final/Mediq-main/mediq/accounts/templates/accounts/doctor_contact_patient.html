@@ -1,0 +1,136 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Patient Messages</h1>
+    <a href="{% url 'doctor_dashboard' %}" class="btn btn-outline-primary">
+      <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+    </a>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      <div class="d-flex" style="height:600px;">
+        <!-- Patient list -->
+        <div class="border-right" style="width:30%; overflow-y:auto;">
+          <div class="p-3 border-bottom bg-light">
+            <h5 class="mb-0"><i class="fas fa-users mr-2"></i>Patients</h5>
+          </div>
+          <ul class="list-unstyled mb-0">
+            {% for p in patients %}
+              <li
+                class="d-flex align-items-center p-3 {% if selected_patient and p.id == selected_patient.id %}bg-primary text-white{% else %}hover-light{% endif %}"
+                style="border-bottom:1px solid #e9ecef; cursor:pointer; transition: all 0.2s ease;"
+                onclick="location.href='?patient={{ p.id }}'">
+
+                {# avatar #}
+                <div class="position-relative">
+                  <img
+                    src="{% if p.profile.profile_picture %}{{ p.profile.profile_picture.url }}{% else %}{% static 'accounts/images/default.jpg' %}{% endif %}"
+                    alt="Avatar"
+                    class="rounded-circle mr-3"
+                    width="45" height="45"
+                    style="object-fit: cover; border: 2px solid {% if selected_patient and p.id == selected_patient.id %}#fff{% else %}#e9ecef{% endif %};"
+                  />
+                </div>
+
+                {# name #}
+                <div>
+                  <span style="font-weight: 500; {% if not selected_patient or p.id != selected_patient.id %}color: #495057;{% endif %}">
+                    {{ p.get_full_name|default:p.username }}
+                  </span>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <!-- Chat panel -->
+        <div class="flex-fill d-flex flex-column">
+          <!-- Chat header -->
+          {% if selected_patient %}
+          <div class="p-3 border-bottom bg-light">
+            <div class="d-flex align-items-center">
+              <img
+                src="{% if selected_patient.profile.profile_picture %}{{ selected_patient.profile.profile_picture.url }}{% else %}{% static 'accounts/images/default.jpg' %}{% endif %}"
+                alt="Selected patient"
+                class="rounded-circle mr-2"
+                width="40" height="40"
+              />
+              <div>
+                <h5 class="mb-0">{{ selected_patient.get_full_name|default:selected_patient.username }}</h5>
+                <small class="text-muted">Patient</small>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          
+          <!-- Chat messages -->
+          <div class="flex-grow-1 p-3" id="chat-container" style="overflow-y:auto; background-color: #f8f9fa;">
+            {% if not selected_patient %}
+              <div class="text-center py-5">
+                <div class="mb-3">
+                  <i class="fas fa-comment-alt" style="font-size: 3rem; color: #dee2e6;"></i>
+                </div>
+                <p class="text-muted">Select a patient to begin messaging.</p>
+              </div>
+            {% else %}
+              {% for m in chat_history %}
+                <div class="mb-3" style="max-width: 75%; clear: both; {% if m.sender_doctor_id == doctor.id %}margin-left: auto;{% endif %}">
+                  <div class="p-3 rounded-lg shadow-sm {% if m.sender_doctor_id == doctor.id %}bg-primary text-white{% else %}bg-white{% endif %}"
+                       style="border-bottom-{% if m.sender_doctor_id == doctor.id %}right{% else %}left{% endif %}-radius: 0;">
+                    {{ m.content }}
+                    <div class="{% if m.sender_doctor_id == doctor.id %}text-white-50{% else %}text-muted{% endif %} small mt-1">
+                      {{ m.timestamp|date:"M j, H:i" }}
+                    </div>
+                  </div>
+                </div>
+              {% empty %}
+                <div class="text-center py-5">
+                  <div class="mb-3">
+                    <i class="fas fa-comment-dots" style="font-size: 3rem; color: #dee2e6;"></i>
+                  </div>
+                  <p class="text-muted">No messages yet. Start the conversation!</p>
+                </div>
+              {% endfor %}
+            {% endif %}
+          </div>
+
+          <!-- Message input -->
+          {% if selected_patient %}
+            <form method="post" class="p-3 border-top bg-white">
+              {% csrf_token %}
+              <div class="form-group mb-2">
+                <textarea name="content"
+                        class="form-control"
+                        rows="3"
+                        placeholder="Type your message here..."
+                        style="border-radius: 8px; resize: none;"
+                        required></textarea>
+              </div>
+              <div class="text-right">
+                <button type="submit" class="btn btn-primary px-4">
+                  <i class="fas fa-paper-plane mr-2"></i>Send
+                </button>
+              </div>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Scroll to bottom of chat on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const chatContainer = document.getElementById('chat-container');
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  });
+</script>
+
+{% endblock %}

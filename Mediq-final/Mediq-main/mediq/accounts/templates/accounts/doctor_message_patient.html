@@ -1,0 +1,255 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor ↔ Patient Chat</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #007bff;
+      --primary-light: #4895ef;
+      --secondary: #6c757d;
+      --light-bg: #f8f9fa;
+      --dark-text: #343a40;
+      --border-radius: 12px;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s ease;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--light-bg);
+      color: var(--dark-text);
+      line-height: 1.6;
+    }
+
+    .chat-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .chat-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--dark-text);
+      margin: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .chat-title i {
+      margin-right: 0.75rem;
+      color: var(--primary);
+    }
+
+    .back-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+    }
+
+    .back-link:hover {
+      transform: translateX(-3px);
+      text-decoration: none;
+    }
+
+    .back-link i {
+      margin-right: 0.5rem;
+    }
+
+    .chat-card {
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .chat-window {
+      height: 450px;
+      overflow-y: auto;
+      padding: 1.5rem;
+      background-color: #f8f9fa;
+      margin-bottom: 0;
+      border: none;
+    }
+
+    .from-doctor, .from-patient {
+      margin-bottom: 1.25rem;
+      max-width: 75%;
+    }
+
+    .from-doctor {
+      text-align: right;
+      margin-left: auto;
+    }
+
+    .from-patient {
+      text-align: left;
+      margin-right: auto;
+    }
+
+    .bubble {
+      display: inline-block;
+      padding: 0.75rem 1.25rem;
+      border-radius: 1rem;
+      position: relative;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .from-doctor .bubble {
+      background: var(--primary);
+      color: #fff;
+      border-bottom-right-radius: 0;
+    }
+
+    .from-patient .bubble {
+      background: white;
+      border: 1px solid #e9ecef;
+      border-bottom-left-radius: 0;
+    }
+
+    .bubble strong {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+    }
+
+    .bubble small {
+      opacity: 0.8;
+      font-size: 0.75rem;
+      display: block;
+      margin-top: 0.25rem;
+    }
+
+    .message-form {
+      padding: 1.25rem;
+      background-color: white;
+      border-top: 1px solid #e9ecef;
+    }
+
+    .message-form .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-control {
+      border-radius: 8px;
+      border: 1px solid #dee2e6;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      transition: var(--transition);
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+    }
+
+    .btn {
+      font-weight: 500;
+      border-radius: 8px;
+      padding: 0.65rem 1.5rem;
+      transition: var(--transition);
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background-color: #0069d9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--secondary);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      opacity: 0.2;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    /* reuse your accessibility & color-mode rules here... */
+  </style>
+</head>
+<body>
+<main class="chat-container">
+  <div class="chat-header">
+    <h1 class="chat-title">
+      <i class="fas fa-comment-medical"></i>
+      Conversation: Dr. {{ doctor.name }} & {{ patient.get_full_name }}
+    </h1>
+
+    <a href="#" onclick="history.back(); return false;" class="back-link">
+      <i class="fas fa-arrow-left"></i> Back
+    </a>
+  </div>
+
+  <div class="chat-card">
+    <div class="chat-window" id="chat-window" aria-live="polite">
+      {% if chat_history %}
+        {% for msg in chat_history %}
+          <div class="{% if msg.sender_doctor %}from-doctor{% else %}from-patient{% endif %}">
+            <div class="bubble">
+              <strong>
+                {{ msg.sender_doctor.name if msg.sender_doctor else msg.sender_user.get_full_name }}
+              </strong>
+              {{ msg.content }}
+              <small class="text-muted">{{ msg.timestamp|date:"M d, H:i" }}</small>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <i class="fas fa-comments"></i>
+          <p>No conversation yet. Send a message to start chatting.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <form method="post" novalidate class="message-form">
+      {% csrf_token %}
+      {{ form.receiver_user }} {# hidden, set in view to current patient #}
+      <div class="form-group">
+        {{ form.content.label_tag }}
+        {{ form.content }}
+        {{ form.content.errors }}
+      </div>
+      <button class="btn btn-primary">
+        <i class="fas fa-paper-plane mr-2"></i> Send
+      </button>
+    </form>
+  </div>
+</main>
+
+<script>
+  // Auto-scroll to bottom of chat window on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const chatWindow = document.getElementById('chat-window');
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  });
+</script>
+</body>
+</html>

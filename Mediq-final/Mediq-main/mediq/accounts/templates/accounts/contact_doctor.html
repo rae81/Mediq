@@ -1,0 +1,465 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat with Dr. {{ selected.name }}</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-light: #4895ef;
+      --secondary: #3f37c9;
+      --success: #06d6a0;
+      --light-bg: #f8f9fa;
+      --dark-text: #333;
+      --border-radius: 12px;
+      --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+    
+    /* —— Accessibility Modes —— */
+    {% if request.session.high_contrast %}
+      body { 
+        background: #000; 
+        color: #fff; 
+        font-family: {% if request.session.alternative_font %}'Oswald'{% else %}'Inter'{% endif %}, sans-serif; 
+        font-size: {{ request.session.font_size|default:"22" }}px; 
+      }
+      .card { 
+        background: #000; 
+        border: 2px solid #ffea00; 
+        border-radius: var(--border-radius);
+        box-shadow: 0 0 15px rgba(255, 234, 0, 0.3);
+      }
+      .chat-container {
+        background: #111;
+        border: 1px solid #ffea00;
+      }
+      .btn-primary { 
+        background: #ffea00; 
+        color: #000; 
+        border: none; 
+      }
+      .btn-primary:hover {
+        background: #fff;
+        color: #000;
+      }
+      .list-group-item {
+        background-color: #111;
+        border-color: #333;
+        color: #fff;
+      }
+      .list-group-item.active {
+        background-color: #ffea00;
+        border-color: #ffea00;
+        color: #000;
+      }
+      .doctor-message {
+        background-color: #333;
+        color: #fff;
+      }
+      .my-message {
+        background-color: #ffea00;
+        color: #000;
+      }
+      .form-control {
+        background-color: #222;
+        border-color: #ffea00;
+        color: #fff;
+      }
+      .form-control:focus {
+        background-color: #222;
+        border-color: #fff;
+        color: #fff;
+      }
+      .back-link {
+        color: #ffea00;
+      }
+      .back-link:hover {
+        color: #fff;
+      }
+      .text-muted {
+        color: #bbb !important;
+      }
+    {% elif request.session.dark_mode %}
+      body { 
+        background: #121212; 
+        color: #f8f9fa; 
+        font-family: {% if request.session.alternative_font %}'Oswald'{% else %}'Inter'{% endif %}, sans-serif; 
+        font-size: {{ request.session.font_size|default:"20" }}px; 
+      }
+      .card { 
+        background: #1e1e1e; 
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+      }
+      .chat-container {
+        background: #2a2a2a;
+      }
+      .btn-primary { 
+        background: var(--primary); 
+        color: #fff; 
+        border: none; 
+      }
+      .btn-primary:hover {
+        background: var(--secondary);
+        color: #fff;
+      }
+      .list-group-item {
+        background-color: #2a2a2a;
+        border-color: #333;
+        color: #f8f9fa;
+      }
+      .list-group-item.active {
+        background-color: var(--primary);
+        border-color: var(--primary);
+      }
+      .doctor-message {
+        background-color: #333;
+        color: #f8f9fa;
+      }
+      .my-message {
+        background-color: var(--primary);
+        color: #fff;
+      }
+      .form-control {
+        background-color: #2a2a2a;
+        border-color: #333;
+        color: #f8f9fa;
+      }
+      .form-control:focus {
+        background-color: #2a2a2a;
+        border-color: var(--primary);
+        color: #f8f9fa;
+      }
+      .back-link {
+        color: var(--primary-light);
+      }
+      .back-link:hover {
+        color: #fff;
+      }
+      .text-muted {
+        color: #aaa !important;
+      }
+    {% else %}
+      body {
+        background: #f8f9fa;
+        color: #333;
+        font-family: {% if request.session.alternative_font %}"Oswald"{% else %}'Inter'{% endif %}, sans-serif;
+        font-size: {{ request.session.font_size|default:"16" }}px;
+      }
+      .card {
+        background: #fff;
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+      }
+      .chat-container {
+        background: #fff;
+      }
+      .btn-primary {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+      }
+      .btn-primary:hover {
+        background: var(--secondary);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+      }
+      .list-group-item.active {
+        background-color: var(--primary);
+        border-color: var(--primary);
+      }
+      .doctor-message {
+        background-color: #f1f3f5;
+        color: #333;
+      }
+      .my-message {
+        background-color: var(--primary);
+        color: #fff;
+      }
+      .back-link {
+        color: var(--primary);
+      }
+      .back-link:hover {
+        color: var(--secondary);
+      }
+    {% endif %}
+
+    /* Common styles */
+    body {
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1000px;
+      padding: 0 15px;
+    }
+    
+    .btn {
+      border-radius: 8px;
+      padding: 0.5rem 1.25rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    
+    .doctor-profile {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      background-color: rgba(67, 97, 238, 0.05);
+    }
+    
+    .doctor-profile img {
+      width: 75px;
+      height: 75px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #fff;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .doctor-info {
+      margin-left: 1rem;
+    }
+    
+    .doctor-info h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    
+    .doctor-info p {
+      margin-bottom: 0;
+      opacity: 0.7;
+    }
+    
+    .list-group {
+      border-radius: var(--border-radius);
+      overflow: hidden;
+    }
+    
+    .list-group-item {
+      border-left: none;
+      border-right: none;
+      padding: 0.75rem 1rem;
+      transition: var(--transition);
+    }
+    
+    .list-group-item:first-child {
+      border-top: none;
+    }
+    
+    .list-group-item:last-child {
+      border-bottom: none;
+    }
+    
+    .list-group-item:hover {
+      background-color: rgba(67, 97, 238, 0.05);
+    }
+    
+    .doctor-item-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none !important;
+      color: inherit;
+    }
+    
+    .doctor-item-link img {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e9ecef;
+      margin-right: 0.75rem;
+    }
+    
+    .chat-container {
+      height: 400px;
+      overflow-y: auto;
+      padding: 1.25rem;
+      border-radius: var(--border-radius);
+      margin-bottom: 1.25rem;
+    }
+    
+    .message {
+      margin-bottom: 1rem;
+      max-width: 75%;
+      position: relative;
+    }
+    
+    .doctor-message, .my-message {
+      padding: 0.75rem 1rem;
+      border-radius: 16px;
+      position: relative;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    
+    .my-message {
+      margin-left: auto;
+      border-bottom-right-radius: 0;
+    }
+    
+    .doctor-message {
+      margin-right: auto;
+      border-bottom-left-radius: 0;
+    }
+    
+    .message-time {
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      opacity: 0.7;
+    }
+    
+    .form-control {
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      transition: var(--transition);
+    }
+    
+    .form-control:focus {
+      box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
+      border-color: var(--primary);
+    }
+    
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none !important;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    
+    .back-link:hover {
+      transform: translateX(-3px);
+    }
+    
+    .back-link i {
+      margin-right: 0.5rem;
+    }
+    
+    .empty-chat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      opacity: 0.6;
+    }
+    
+    .empty-chat i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+<main class="container py-4" role="main">
+
+  <!-- Back link to patient dashboard -->
+  <a href="{% url 'dashboard' %}" class="back-link mb-4 d-inline-block">
+    <i class="fas fa-arrow-left"></i> Back to Dashboard
+  </a>
+
+  <div class="row">
+    <!-- Sidebar: list of doctors -->
+    <div class="col-lg-4 mb-4">
+      <div class="card h-100">
+        <div class="card-body p-0">
+          <div class="p-3 border-bottom">
+            <h5 class="mb-0"><i class="fas fa-user-md mr-2"></i>Your Doctors</h5>
+          </div>
+          <ul class="list-group" aria-label="Choose doctor to chat">
+            {% for doc in doctors %}
+              <li class="list-group-item {% if doc.id == selected.id %}active{% endif %}">
+                <a href="?doctor={{ doc.id }}" class="doctor-item-link {% if doc.id == selected.id %}text-white{% endif %}">
+                  <img src="{{ doc.img_url }}"
+                       alt="Dr. {{ doc.name }}"
+                       onerror="this.src='{% static 'accounts/images/default.jpg' %}'">
+                  <div>
+                    <div style="font-weight: 500;">Dr. {{ doc.name }}</div>
+                    <small>{{ doc.specialty }}</small>
+                  </div>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat area -->
+    <div class="col-lg-8">
+      <div class="card h-100">
+        <div class="card-body">
+          <!-- Doctor profile -->
+          <div class="doctor-profile">
+            <img src="{{ selected.img_url }}"
+                 alt="Dr. {{ selected.name }}"
+                 onerror="this.src='{% static 'accounts/images/default.jpg' %}'">
+            <div class="doctor-info">
+              <h1>Dr. {{ selected.name }}</h1>
+              <p>{{ selected.specialty }}</p>
+            </div>
+          </div>
+
+          <!-- Chat history -->
+          <div class="chat-container" id="chat-container" aria-live="polite">
+            {% if chat_history %}
+              {% for msg in chat_history %}
+                <div class="message">
+                  <div class="{% if msg.sender_user == user %}my-message{% else %}doctor-message{% endif %}">
+                    {{ msg.content|linebreaksbr }}
+                    <div class="message-time">
+                      {{ msg.timestamp|date:"M d, H:i" }}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="empty-chat">
+                <i class="fas fa-comment-medical"></i>
+                <p class="text-muted"><em>No messages yet. Send your first message below.</em></p>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Send new message -->
+          <form method="post" novalidate>
+            {% csrf_token %}
+            <!-- Hidden field to carry which doctor we're messaging -->
+            <input type="hidden" name="receiver_doctor" value="{{ selected.id }}">
+
+            <div class="form-group mb-2">
+              {{ form.content }}
+              {{ form.content.errors }}
+            </div>
+            <div class="text-right">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane mr-2"></i> Send Message
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Auto-scroll to bottom of chat window on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const chatContainer = document.getElementById('chat-container');
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    restart: always
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=your-secret-key-replace-this-in-production
+      - EMAIL_HOST_USER=your-email@example.com
+      - EMAIL_HOST_PASSWORD=your-password
+      - STATIC_ROOT=/app/static
+      - STATIC_URL=/static/
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+
+volumes:
+  static_volume:
+  media_volume: 

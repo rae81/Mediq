@@ -1,0 +1,16 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% block content %}
+  <h2>Your Patients</h2>
+  <ul>
+    {% for patient in patients %}
+      <li>
+        <a href="{% url 'doctor_chat_detail' patient.id %}">
+          {{ patient.get_full_name|default:patient.username }}
+        </a>
+      </li>
+    {% empty %}
+      <li>No patients have messaged you yet.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

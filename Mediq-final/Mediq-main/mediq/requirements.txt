@@ -1,0 +1,7 @@
+Django>=3.2.25
+djangorestframework
+django-webpush
+apscheduler
+twilio
+python-dateutil
+Pillow 
